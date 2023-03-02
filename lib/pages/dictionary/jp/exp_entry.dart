@@ -100,18 +100,20 @@ class SenseEle {
 }
 
 @collection
-class JPExpEntry extends JPAux implements Entry {
+class JPExpEntry extends ExpEntry {
   const JPExpEntry({
-    required this.id,
+    required super.id,
     this.kEles,
     this.rEles,
     this.senseEles,
   });
 
-  @override
-  final Id id; //ent_seq
+  ///k_ele*
+  final List<KEle>? kEles;
 
-  final List<KEle>? kEles; //k_ele*
-  final List<REle>? rEles; //r_ele+
-  final List<SenseEle>? senseEles; //sense+
+  ///r_ele+
+  final List<REle>? rEles;
+
+  ///sense+
+  final List<SenseEle>? senseEles;
 }

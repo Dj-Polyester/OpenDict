@@ -32,7 +32,7 @@ class Dictionary extends CustomPage {
 
   @override
   void onSearchTextEditingComplete(int selectedDictIndex, String s) async {
-    model.items =
-        await Globals.dicts[selectedDictIndex].loadExpsFromDb(s) as List<Entry>;
+    model.items = await Globals.dicts[selectedDictIndex].loadExpsFromDb(s)
+        as List<ExpEntry>;
   }
 }

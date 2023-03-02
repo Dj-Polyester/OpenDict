@@ -33,13 +33,25 @@ extension _XmlElement on XmlElement {
     return getElement(name)!.text;
   }
 
+  int getTextContentToInt(String name) {
+    return int.parse(getTextContent(name));
+  }
+
+  String? getTextContentNullable(String name) {
+    return getElement(name)?.text;
+  }
+
+  int? getTextContentNullableToInt(String name) {
+    return int.tryParse(getTextContentNullable(name) ?? "");
+  }
+
   bool exists(String name) {
     return findAllElements(name).isNotEmpty;
   }
 
   String getAttributeMap(
-      String name, String defaultName, Map<String, String> map) {
-    return map[getAttribute(name) ?? defaultName]!;
+      String name, String defaultValue, Map<String, String> map) {
+    return map[getAttribute(name) ?? defaultValue]!;
   }
 }
 
@@ -281,7 +293,31 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
   @override
   List<JPCharEntry> parseChars(String contents) {
     // TODO: implement parseChars
-    throw UnimplementedError();
+    return XmlDocument.parse(contents).findAllElements("character").map((elem) {
+      final List<Radical> radical = elem
+          .getElement("radical")!
+          .findAllElements("rad_value")
+          .map((rawRadValue) => Radical()
+            ..radType = rawRadValue.getAttributeMap(
+                "rad_type", "classical", JPAux.radTypeMap)
+            ..radValue = rawRadValue.text)
+          .toList();
+
+      XmlElement miscRaw = elem.getElement("misc")!;
+
+      final Misc misc = Misc()
+        ..freq = miscRaw.getTextContentNullableToInt("freq")
+        ..strokeCount = miscRaw.getTextContentNullableToInt("freq")
+        ..jlpt = miscRaw.getTextContentNullableToInt("jlpt")
+        ..grade = JPAux.kanjiGradeMap[miscRaw.getTextContentNullable("grade")]
+        ..radName = miscRaw.findExtractTextNullOtherwise("rad_name");
+
+      return JPCharEntry(
+        literal: elem.getTextContent("literal"),
+        radical: radical,
+        misc: misc,
+      );
+    }).toList();
   }
 
   @override
@@ -354,7 +390,7 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
           ..sInf = senseElemRaw.findExtractTextNullOtherwise("s_inf");
       }).toList();
       return JPExpEntry(
-        id: int.parse(elem.getElement("ent_seq")!.text),
+        id: elem.getTextContentToInt("ent_seq"),
         kEles: (kElems.isEmpty) ? null : kElems,
         rEles: (rElems.isEmpty) ? null : rElems,
         senseEles: (senseElems.isEmpty) ? null : senseElems,

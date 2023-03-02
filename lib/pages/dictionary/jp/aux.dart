@@ -273,6 +273,22 @@ class JPAux {
     "fig": "figurative",
     "expl": "explanation",
   };
+
+  static const Map<String, String> kanjiGradeMap = {
+    "1": "Jōyō kanji, taught in grade 1",
+    "2": "Jōyō kanji, taught in grade 2",
+    "3": "Jōyō kanji, taught in grade 3",
+    "4": "Jōyō kanji, taught in grade 4",
+    "5": "Jōyō kanji, taught in grade 5",
+    "6": "Jōyō kanji, taught in grade 6",
+    "8": "Jōyō kanji taught in Junior High",
+    "9": "Jinmeiyō kanji, used in names",
+    "10": "Jinmeiyō variant of a jōyō kanji, used in names",
+  };
+  static const Map<String, String> radTypeMap = {
+    "classical": "KangXi",
+    "nelson_c": '"classic" Nelson Kanji Dictionary',
+  };
   // static const Map<String, String> hiraganaMap = {
   //   //0
   //   "a": "あ",

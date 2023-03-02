@@ -23,9 +23,9 @@ abstract class CustomPageModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<Entry> items_ = [];
-  List<Entry> get items => items_;
-  set items(List<Entry> newValue) {
+  List<ExpEntry> items_ = [];
+  List<ExpEntry> get items => items_;
+  set items(List<ExpEntry> newValue) {
     items_ = newValue;
     notifyListeners();
   }
@@ -136,7 +136,7 @@ abstract class CustomPage {
         child: Selector<MyHomePageModel, int>(
           selector: (_, myHomePageModel) => myHomePageModel.selectedDictIndex,
           builder: (context, selectedDictIndex, _) =>
-              Selector<CustomPageModel, Tuple3<List<Entry>, bool, bool>>(
+              Selector<CustomPageModel, Tuple3<List<ExpEntry>, bool, bool>>(
             selector: (_, pageModel) => Tuple3(
                 pageModel.items, pageModel.searchVisible, pageModel.searchDone),
             builder: (context, tuple, __) {

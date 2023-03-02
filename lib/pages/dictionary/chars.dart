@@ -36,7 +36,7 @@ class LangChars extends CustomPage {
   @override
   void onSearchTextEditingComplete(int selectedDictIndex, String s) async {
     model.items = await Globals.dicts[selectedDictIndex].loadCharsFromDb(s)
-        as List<Entry>;
+        as List<ExpEntry>;
   }
 
   @override
@@ -45,7 +45,7 @@ class LangChars extends CustomPage {
         child: Selector<MyHomePageModel, int>(
           selector: (_, myHomePageModel) => myHomePageModel.selectedDictIndex,
           builder: (context, selectedDictIndex, _) =>
-              Selector<CustomPageModel, Tuple3<List<Entry>, bool, bool>>(
+              Selector<CustomPageModel, Tuple3<List<ExpEntry>, bool, bool>>(
             selector: (_, pageModel) => Tuple3(
                 pageModel.items, pageModel.searchVisible, pageModel.searchDone),
             builder: (context, tuple, __) {
