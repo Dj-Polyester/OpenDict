@@ -1,4 +1,5 @@
 import 'package:isar/isar.dart';
+import 'package:jgraph/pages/dictionary/jp/char_entry.dart';
 import 'package:jgraph/pages/dictionary/jp/exp_entry.dart';
 
 class Db {
@@ -7,6 +8,7 @@ class Db {
   static Isar? _instance;
   static Isar get instance => _instance!;
   static final List<CollectionSchema> _schemas = [
+    JPCharEntrySchema,
     JPExpEntrySchema,
   ];
   static Future<void> open() async {

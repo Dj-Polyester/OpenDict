@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Db.open();
-  await Globals.dicts[0].loadExps();
+  await Globals.dicts[0].loadAll();
   runApp(const MyApp());
 }
 
@@ -43,7 +43,7 @@ class MyHomePageModel extends ChangeNotifier {
 
   void setSelectedDictIndexAsync(int newIndex) async {
     _selectedDictIndex = newIndex;
-    await Globals.dicts[_selectedDictIndex].loadExps();
+    await Globals.dicts[_selectedDictIndex].loadAll();
     notifyListeners();
   }
 

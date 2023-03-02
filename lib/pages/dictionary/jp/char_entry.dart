@@ -1,10 +1,13 @@
 import 'package:isar/isar.dart';
 import 'package:jgraph/api/entry.dart';
 
+part 'char_entry.g.dart';
+
 @embedded
 class ReadingMeaning {
   List<String>? onyomi;
   List<String>? kunyomi;
+  List<String>? nanori;
   List<String>? meaning;
 }
 
@@ -24,9 +27,15 @@ class Misc {
   ///only the first one will be stored
   int? strokeCount;
 
+  ///freq?, frequency ranking among the 2500 kanji
   int? freq;
+
+  ///jlpt?, old jlpt level. The new levels are regarded as
+  ///being similar to the old levels except that the old level 2 is
+  ///now divided between N2 and N3
   int? jlpt;
 
+  ///rad_name*, if present the entry/literal is a radical
   List<String>? radName;
 }
 

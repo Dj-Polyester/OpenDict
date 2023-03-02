@@ -18,6 +18,11 @@ extension _XmlElement on XmlElement {
     return (iter.isEmpty) ? null : iter.map((e) => e.text).toList();
   }
 
+  List<String>? findExtractTextFilterNullOtherwise(String name) {
+    Iterable<XmlElement> iter = findAllElements(name);
+    return (iter.isEmpty) ? null : iter.map((e) => e.text).toList();
+  }
+
   List<String>? findExtractTextMapNullOtherwise(
       String name, Map<String, String> map) {
     Iterable<XmlElement> iter = findAllElements(name);
@@ -53,6 +58,19 @@ extension _XmlElement on XmlElement {
       String name, String defaultValue, Map<String, String> map) {
     return map[getAttribute(name) ?? defaultValue]!;
   }
+}
+
+extension _List on List {
+  List<String> makeBullets() => (length > 1)
+      ? asMap().entries.map((e) => "${e.key + 1}. ${e.value}").toList()
+      : cast();
+}
+
+extension XmlElementList on Iterable<XmlElement> {
+  List<String> getElementsTextWithAttr(name, value) =>
+      where((element) => element.getAttribute(name) == value)
+          .map((e) => e.text)
+          .toList();
 }
 
 // enum JPCharType {
@@ -118,43 +136,83 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
   @override
   String? charBaseName = "kanjidic2.xml";
   @override
-  bool isPictographic = true;
-  @override
-  Widget charItemBuilder(List<JPCharEntry> charItems, int index) {
-    // TODO: implement charBuilder
-    throw UnimplementedError();
+  bool hasChars = true;
+
+  ///Extract onyomi, kunyomi, nanori and meanings
+  Tuple4<String?, String?, String?, String?>
+      getListOfReadingsAndMeaningsFromChar(
+    JPCharEntry charEntryItem,
+  ) {
+    String? onyomiTxt = charEntryItem.readingMeaning?.onyomi?.join("、");
+    String? kunyomiTxt = charEntryItem.readingMeaning?.kunyomi?.join("、");
+    String? nanoriTxt = charEntryItem.readingMeaning?.nanori?.join("、");
+    String? meaningTxt = charEntryItem.readingMeaning?.meaning?.join(", ");
+
+    String? onyomiTxtRefined = (onyomiTxt == null) ? "" : "on: $onyomiTxt";
+    String? kunyomiTxtRefined = (kunyomiTxt == null) ? "" : "kun: $kunyomiTxt";
+    String? nanoriTxtRefined =
+        (nanoriTxt == null) ? "" : "nanori (readings in names): $nanoriTxt";
+    String? meaningTxtRefined = (meaningTxt == null) ? "" : "($meaningTxt)";
+    return Tuple4(onyomiTxtRefined, kunyomiTxtRefined, nanoriTxtRefined,
+        meaningTxtRefined);
   }
 
-  Tuple2<List<String>, List<String>> getListOfReadingsAndSenses(
-    JPExpEntry item,
+  @override
+  Widget charEntryItemBuilder(JPCharEntry charEntryItem) {
+    Tuple4<String?, String?, String?, String?> tuple4 =
+        getListOfReadingsAndMeaningsFromChar(charEntryItem);
+
+    String? onyomiTxtRefined = tuple4.item1;
+    String? kunyomiTxtRefined = tuple4.item2;
+    String? nanoriTxtRefined = tuple4.item3;
+    String? meaningTxtRefined = tuple4.item4;
+
+    return ListTile(
+      leading: const Icon(Icons.star_border_outlined),
+      title: Text("${charEntryItem.literal} $meaningTxtRefined"),
+      subtitle:
+          Text("$onyomiTxtRefined\n$kunyomiTxtRefined\n$nanoriTxtRefined"),
+    );
+  }
+
+  void constructListOfSenses(
+    JPExpEntry expEntryItem,
+    List<String> listOfSenses, {
+    bool stagr_ = true,
+  }) {
+    if (expEntryItem.senseEles != null) {
+      for (SenseEle senseEle in expEntryItem.senseEles!) {
+        String? tmp = ((stagr_) ? senseEle.stagr : senseEle.stagk)?.join("、");
+        String? senseEleRefined = (tmp == null) ? "" : " ($tmp)";
+
+        String senseTxt =
+            "${senseEle.gloss?.map((e) => e.text).join(", ") ?? ""}$senseEleRefined";
+
+        if (senseTxt.isNotEmpty) {
+          listOfSenses.add(senseTxt);
+        }
+      }
+    }
+  }
+
+  Tuple2<List<String>, List<String>> getListOfReadingsAndMeaningsFromExp(
+    JPExpEntry expEntryItem,
   ) {
     List<String> listOfSenses = [];
     List<String>? listOfReadingsIntermediary;
 
-    if (item.kEles == null) {
+    if (expEntryItem.kEles == null) {
       List<String> listOfReadings = [];
-      for (REle rEle in item.rEles!) {
+      for (REle rEle in expEntryItem.rEles!) {
         listOfReadings.add(rEle.reb);
       }
-      if (item.senseEles != null) {
-        for (SenseEle senseEle in item.senseEles!) {
-          String? tmp = senseEle.stagr?.join(", ");
-          String? senseEleRefined = (tmp == null) ? "" : " ($tmp)";
-
-          String senseTxt =
-              "${senseEle.gloss?.map((e) => e.text).join(", ") ?? ""}$senseEleRefined";
-
-          if (senseTxt.isNotEmpty) {
-            listOfSenses.add(senseTxt);
-          }
-        }
-      }
       listOfReadingsIntermediary = listOfReadings;
+      constructListOfSenses(expEntryItem, listOfSenses);
     } else {
       List<Tuple2<List<String>, List<String>>> listOfReadings = [];
-      for (REle rEle in item.rEles!) {
+      for (REle rEle in expEntryItem.rEles!) {
         List<String> kEles = (rEle.reRestr == null)
-            ? item.kEles!.map((e) => e.keb).toList()
+            ? expEntryItem.kEles!.map((e) => e.keb).toList()
             : rEle.reRestr!;
 
         List<int> indices = listOfReadings
@@ -171,49 +229,24 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
           }
         }
       }
-      if (item.senseEles != null) {
-        for (SenseEle senseEle in item.senseEles!) {
-          String? tmp = senseEle.stagk?.join(", ");
-          String? senseEleRefined = (tmp == null) ? "" : " ($tmp)";
-
-          String senseTxt =
-              "${senseEle.gloss?.map((e) => e.text).join(", ") ?? ""}$senseEleRefined";
-
-          if (senseTxt.isNotEmpty) {
-            listOfSenses.add(senseTxt);
-          }
-        }
-      }
+      constructListOfSenses(expEntryItem, listOfSenses, stagr_: false);
       // dev.log(listOfReadings.toString(), name: "Japanese");
       listOfReadingsIntermediary = listOfReadings
-          .map((e) => "${e.item1.join(", ")} (${e.item2.join(", ")})")
+          .map((e) => "${e.item1.join("、")} (${e.item2.join("、")})")
           .toList();
     }
 
-    List<String> listOfReadingsRefined = (listOfReadingsIntermediary.length > 1)
-        ? listOfReadingsIntermediary
-            .asMap()
-            .entries
-            .map((e) => "${e.key + 1}. ${e.value}")
-            .toList()
-        : listOfReadingsIntermediary;
-
-    List<String> listOfSensesRefined = (listOfSenses.length > 1)
-        ? listOfSenses
-            .asMap()
-            .entries
-            .map((e) => "${e.key + 1}. ${e.value}")
-            .toList()
-        : listOfSenses;
+    List<String> listOfReadingsRefined =
+        listOfReadingsIntermediary.makeBullets();
+    List<String> listOfSensesRefined = listOfSenses.makeBullets();
 
     return Tuple2(listOfReadingsRefined, listOfSensesRefined);
   }
 
   @override
-  Widget expItemBuilder(List<JPExpEntry> expItems, int index) {
-    JPExpEntry item = expItems[index];
+  Widget expEntryItemBuilder(JPExpEntry expEntryItem) {
     Tuple2<List<String>, List<String>> tuple2 =
-        getListOfReadingsAndSenses(item);
+        getListOfReadingsAndMeaningsFromExp(expEntryItem);
 
     List<String> listOfReadings = tuple2.item1;
     List<String> listOfSenses = tuple2.item2;
@@ -236,6 +269,25 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
   }
 
   @override
+  Future<List<JPCharEntry>> loadCharsFromDb(String s) async {
+    // TODO: implement loadCharsFromDb
+    return await Db.instance
+        .collection<JPCharEntry>()
+        .filter()
+        .literalEqualTo(s)
+        .or()
+        .readingMeaning((q) => q
+            .kunyomiElementStartsWith(s)
+            .or()
+            .onyomiElementStartsWith(s)
+            .or()
+            .nanoriElementStartsWith(s)
+            .or()
+            .meaningElementStartsWith(s))
+        .findAll();
+  }
+
+  @override
   Future<List<JPExpEntry>> loadExpsFromDb(String s) async {
     String? hiragana, katakana;
     QueryBuilder<KEle, KEle, QAfterFilterCondition> Function(
@@ -245,33 +297,9 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
     QueryBuilder<Gloss, Gloss, QAfterFilterCondition> Function(
         QueryBuilder<Gloss, Gloss, QFilterCondition>) qGloss;
 
-    // if (s.isAlphanumeric()) {
-    //   hiragana = s.toKana(JPCharType.hiragana);
-    //   katakana = s.toKana(JPCharType.katakana);
-
-    //   qKEle = (q) => q
-    //       .kebStartsWith(s)
-    //       .or()
-    //       .kebStartsWith(hiragana!)
-    //       .or()
-    //       .kebStartsWith(katakana!);
-    //   qREle = (q) => q
-    //       .rebStartsWith(s)
-    //       .or()
-    //       .rebStartsWith(hiragana!)
-    //       .or()
-    //       .rebStartsWith(katakana!);
-    //   qGloss = (q) => q
-    //       .textStartsWith(s)
-    //       .or()
-    //       .textStartsWith(hiragana!)
-    //       .or()
-    //       .textStartsWith(katakana!);
-    // } else {
     qKEle = (q) => q.kebStartsWith(s);
     qREle = (q) => q.rebStartsWith(s);
     qGloss = (q) => q.textStartsWith(s);
-    // }
 
     return await Db.instance
         .collection<JPExpEntry>()
@@ -282,12 +310,6 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
         .or()
         .senseElesElement((q) => q.glossElement(qGloss))
         .findAll();
-  }
-
-  @override
-  Future<List<JPCharEntry>> loadCharsFromDb(String s) {
-    // TODO: implement loadCharsFromDb
-    throw UnimplementedError();
   }
 
   @override
@@ -312,10 +334,21 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
         ..grade = JPAux.kanjiGradeMap[miscRaw.getTextContentNullable("grade")]
         ..radName = miscRaw.findExtractTextNullOtherwise("rad_name");
 
+      final XmlElement? readingMeaningRaw = elem.getElement("reading_meaning");
+      final Iterable<XmlElement>? readingRaw =
+          readingMeaningRaw?.findAllElements("reading");
+
+      final ReadingMeaning readingMeaning = ReadingMeaning()
+        ..meaning = readingMeaningRaw?.findExtractTextNullOtherwise("meaning")
+        ..nanori = readingMeaningRaw?.findExtractTextNullOtherwise("nanori")
+        ..onyomi = readingRaw?.getElementsTextWithAttr("r_type", "ja_on")
+        ..kunyomi = readingRaw?.getElementsTextWithAttr("r_type", "ja_kun");
+
       return JPCharEntry(
         literal: elem.getTextContent("literal"),
         radical: radical,
         misc: misc,
+        readingMeaning: readingMeaning,
       );
     }).toList();
   }

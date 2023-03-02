@@ -16,7 +16,7 @@ class LangCharsModel extends CustomPageModel {
 
   @override
   Widget itemBuilder(int index, int selectedDictIndex) {
-    return Globals.dicts[selectedDictIndex].charItemBuilder(items, index);
+    return Globals.dicts[selectedDictIndex].charEntryItemBuilder(items[index]);
   }
 }
 
@@ -34,9 +34,8 @@ class LangChars extends CustomPage {
   }
 
   @override
-  void onSearchTextEditingComplete(int selectedDictIndex, String s) async {
-    model.items = await Globals.dicts[selectedDictIndex].loadCharsFromDb(s)
-        as List<ExpEntry>;
+  void onSearchTextSubmitted(int selectedDictIndex, String s) async {
+    model.items = await Globals.dicts[selectedDictIndex].loadCharsFromDb(s);
   }
 
   @override
@@ -45,11 +44,11 @@ class LangChars extends CustomPage {
         child: Selector<MyHomePageModel, int>(
           selector: (_, myHomePageModel) => myHomePageModel.selectedDictIndex,
           builder: (context, selectedDictIndex, _) =>
-              Selector<CustomPageModel, Tuple3<List<ExpEntry>, bool, bool>>(
+              Selector<CustomPageModel, Tuple3<List, bool, bool>>(
             selector: (_, pageModel) => Tuple3(
                 pageModel.items, pageModel.searchVisible, pageModel.searchDone),
             builder: (context, tuple, __) {
-              return (Globals.dicts[selectedDictIndex].isPictographic)
+              return (Globals.dicts[selectedDictIndex].hasChars)
                   ? bodyBuilderRaw(context, tuple, selectedDictIndex)
                   : Center(
                       child: Column(
@@ -62,7 +61,7 @@ class LangChars extends CustomPage {
                         const Padding(
                           padding: EdgeInsets.all(24.0),
                           child: Text(
-                            "The script of the selected language is not pictographic, no characters were found",
+                            "The dictionary does not have any characters, no characters found",
                             style: TextStyle(fontSize: 25),
                           ),
                         )

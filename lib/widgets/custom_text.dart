@@ -16,6 +16,11 @@ class CustomTextModel extends ChangeNotifier {
     setCursorPos();
   }
 
+  String get text {
+    saveCursorPos();
+    return controller.text;
+  }
+
   void saveCursorPos() {
     cursorPos = controller.selection.baseOffset;
   }
@@ -24,12 +29,19 @@ class CustomTextModel extends ChangeNotifier {
     controller.selection =
         TextSelection.fromPosition(TextPosition(offset: cursorPos));
   }
+
+  void focus() {
+    focusNode.requestFocus();
+  }
+
+  void unfocus() {
+    focusNode.unfocus();
+  }
 }
 
 class CustomTextWithProvider extends StatelessWidget {
   CustomTextWithProvider({
     Key? key,
-    this.validator,
     this.labelText = "",
     this.hintText = "",
     this.inputText,
@@ -42,15 +54,16 @@ class CustomTextWithProvider extends StatelessWidget {
     this.readOnly = false,
     this.isCollapsed = false,
     this.onEditingComplete,
+    this.onSubmitted,
   }) : super(key: key);
 
   final bool isSecret;
-  final void Function(String)? onEditingComplete;
+  final void Function()? onEditingComplete;
+  final void Function(String)? onSubmitted;
   final bool obscureText, readOnly, isCollapsed;
   final Widget? prefixIcon, suffixIcon;
   final TextStyle? textStyle;
   final String? inputText;
-  final String? Function(String?)? validator;
   final Function(String)? onChanged;
 
   final String labelText, hintText;
@@ -66,7 +79,7 @@ class CustomTextWithProvider extends StatelessWidget {
           padding: const EdgeInsets.all(8.0),
           child: CustomText(
             onEditingComplete: onEditingComplete,
-            validator: validator,
+            onSubmitted: onSubmitted,
             labelText: labelText,
             hintText: hintText,
             onChanged: onChanged,
@@ -85,7 +98,6 @@ class CustomTextWithProvider extends StatelessWidget {
 class CustomText extends StatelessWidget {
   const CustomText({
     Key? key,
-    this.validator,
     this.labelText = "",
     this.hintText = "",
     this.onChanged,
@@ -96,24 +108,27 @@ class CustomText extends StatelessWidget {
     this.readOnly = false,
     this.isCollapsed = false,
     this.onEditingComplete,
+    this.onSubmitted,
   }) : super(key: key);
 
-  final void Function(String)? onEditingComplete;
+  final void Function()? onEditingComplete;
+  final void Function(String)? onSubmitted;
   final bool obscureText, readOnly, isCollapsed;
   final Widget? prefixIcon, suffixIcon;
   final TextStyle? textStyle;
 
-  final String? Function(String?)? validator;
   final String labelText, hintText;
   final Function(String)? onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
-      onEditingComplete: (onEditingComplete == null)
-          ? null
-          : () => onEditingComplete!(
-              context.read<CustomTextModel>().controller.text),
+    return TextField(
+      onEditingComplete: onEditingComplete,
+      onSubmitted: (String s) {
+        String tmpText = context.read<CustomTextModel>().text;
+        onSubmitted!(s);
+        context.read<CustomTextModel>().text = tmpText;
+      },
       readOnly: readOnly,
       obscureText: obscureText,
       style: textStyle,
@@ -126,7 +141,6 @@ class CustomText extends StatelessWidget {
       ),
       controller: context.read<CustomTextModel>().controller,
       focusNode: context.read<CustomTextModel>().focusNode,
-      validator: validator,
       onChanged: onChanged,
     );
   }

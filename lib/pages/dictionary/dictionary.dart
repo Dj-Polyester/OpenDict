@@ -13,7 +13,7 @@ class DictionaryModel extends CustomPageModel {
 
   @override
   Widget itemBuilder(int index, int selectedDictIndex) {
-    return Globals.dicts[selectedDictIndex].expItemBuilder(items, index);
+    return Globals.dicts[selectedDictIndex].expEntryItemBuilder(items[index]);
   }
 }
 
@@ -31,8 +31,7 @@ class Dictionary extends CustomPage {
   }
 
   @override
-  void onSearchTextEditingComplete(int selectedDictIndex, String s) async {
-    model.items = await Globals.dicts[selectedDictIndex].loadExpsFromDb(s)
-        as List<ExpEntry>;
+  void onSearchTextSubmitted(int selectedDictIndex, String s) async {
+    model.items = await Globals.dicts[selectedDictIndex].loadExpsFromDb(s);
   }
 }

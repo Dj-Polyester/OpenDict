@@ -33,7 +33,7 @@ class Vocabulary extends CustomPage {
   }
 
   @override
-  void onSearchTextEditingComplete(int selectedDictIndex, String s) {
+  void onSearchTextSubmitted(int selectedDictIndex, String s) {
     // TODO: implement onEditingComplete
   }
 }

@@ -7,13 +7,13 @@ abstract class Lang<ExpEntry, CharEntry> {
   String? dirName;
   String? expBaseName;
   String? charBaseName;
-  bool isPictographic = false;
+  bool hasChars = false;
 
-  Widget expItemBuilder(List<ExpEntry> expItems, int index);
-  Widget charItemBuilder(List<CharEntry> charItems, int index);
+  Widget charEntryItemBuilder(CharEntry charEntryItem);
+  Widget expEntryItemBuilder(ExpEntry expEntryItem);
 
-  Future<List<ExpEntry>> loadExpsFromDb(String s);
   Future<List<CharEntry>> loadCharsFromDb(String s);
+  Future<List<ExpEntry>> loadExpsFromDb(String s);
   Loader_ loader = Loader_();
 
   Future<void> load<T>(

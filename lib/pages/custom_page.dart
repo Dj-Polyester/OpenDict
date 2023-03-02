@@ -23,9 +23,9 @@ abstract class CustomPageModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<ExpEntry> items_ = [];
-  List<ExpEntry> get items => items_;
-  set items(List<ExpEntry> newValue) {
+  List items_ = [];
+  List get items => items_;
+  set items(List newValue) {
     items_ = newValue;
     notifyListeners();
   }
@@ -90,11 +90,11 @@ abstract class CustomPage {
           labelText: "Search",
           hintText: "Search for an expression",
           onChanged: (String s) => onSearchTextChanged(selectedDictIndex, s),
-          onEditingComplete: (String s) {
+          onSubmitted: (String s) {
             if (s.isEmpty) {
             } else {
               context.read<CustomPageModel>().didSearch();
-              onSearchTextEditingComplete(selectedDictIndex, s);
+              onSearchTextSubmitted(selectedDictIndex, s);
             }
           },
         ),
@@ -136,7 +136,7 @@ abstract class CustomPage {
         child: Selector<MyHomePageModel, int>(
           selector: (_, myHomePageModel) => myHomePageModel.selectedDictIndex,
           builder: (context, selectedDictIndex, _) =>
-              Selector<CustomPageModel, Tuple3<List<ExpEntry>, bool, bool>>(
+              Selector<CustomPageModel, Tuple3<List, bool, bool>>(
             selector: (_, pageModel) => Tuple3(
                 pageModel.items, pageModel.searchVisible, pageModel.searchDone),
             builder: (context, tuple, __) {
@@ -153,5 +153,5 @@ abstract class CustomPage {
 
   void onFabPressed(BuildContext context);
   void onSearchTextChanged(int selectedDictIndex, String s);
-  void onSearchTextEditingComplete(int selectedDictIndex, String s);
+  void onSearchTextSubmitted(int selectedDictIndex, String s);
 }
