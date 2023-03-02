@@ -30,18 +30,6 @@ abstract class CustomPageModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool _searchVisible = false;
-  bool get searchVisible => _searchVisible;
-  set searchVisible(bool newValue) {
-    _searchVisible = newValue;
-    notifyListeners();
-  }
-
-  void toggleVisibility() {
-    _searchVisible = !_searchVisible;
-    notifyListeners();
-  }
-
   Widget itemBuilder(int index, int selectedDictIndex);
 }
 
@@ -71,33 +59,31 @@ abstract class CustomPage {
       );
   Widget? appBarBuilder(BuildContext context) => AppBar(
         title: Text(context.read<CustomPageModel>().label),
-        actions: [
-          IconButton(
-            onPressed: () {
-              context.read<CustomPageModel>().toggleVisibility();
-            },
-            icon: const Icon(Icons.search),
-          )
-        ],
+        // actions: [
+        //   IconButton(
+        //     onPressed: () {
+        //       context.read<CustomPageModel>().toggleVisibility();
+        //     },
+        //     icon: const Icon(Icons.search),
+        //   )
+        // ],
       );
 
   Widget bodyBuilderRaw(
-      BuildContext context, Tuple3 tuple, int selectedDictIndex) {
+      BuildContext context, Tuple2 tuple, int selectedDictIndex) {
     return Column(children: [
-      Visibility(
-        visible: tuple.item2,
-        child: CustomTextWithProvider(
-          labelText: "Search",
-          hintText: "Search for an expression",
-          onChanged: (String s) => onSearchTextChanged(selectedDictIndex, s),
-          onSubmitted: (String s) {
-            if (s.isEmpty) {
-            } else {
-              context.read<CustomPageModel>().didSearch();
-              onSearchTextSubmitted(selectedDictIndex, s);
-            }
-          },
-        ),
+      CustomTextWithProvider(
+        prefixIcon: const Icon(Icons.search),
+        labelText: "Search",
+        hintText: "Search for an expression",
+        onChanged: (String s) => onSearchTextChanged(selectedDictIndex, s),
+        onSubmitted: (String s) {
+          if (s.isEmpty) {
+          } else {
+            context.read<CustomPageModel>().didSearch();
+            onSearchTextSubmitted(selectedDictIndex, s);
+          }
+        },
       ),
       Expanded(
         child: ((tuple.item1.isEmpty)
@@ -112,7 +98,7 @@ abstract class CustomPage {
                     Padding(
                       padding: const EdgeInsets.all(24.0),
                       child: Text(
-                        (tuple.item3)
+                        (tuple.item2)
                             ? context.read<CustomPageModel>().emptyText
                             : context.read<CustomPageModel>().welcomeText,
                         style: const TextStyle(fontSize: 25),
@@ -136,9 +122,9 @@ abstract class CustomPage {
         child: Selector<MyHomePageModel, int>(
           selector: (_, myHomePageModel) => myHomePageModel.selectedDictIndex,
           builder: (context, selectedDictIndex, _) =>
-              Selector<CustomPageModel, Tuple3<List, bool, bool>>(
-            selector: (_, pageModel) => Tuple3(
-                pageModel.items, pageModel.searchVisible, pageModel.searchDone),
+              Selector<CustomPageModel, Tuple2<List, bool>>(
+            selector: (_, pageModel) =>
+                Tuple2(pageModel.items, pageModel.searchDone),
             builder: (context, tuple, __) {
               return bodyBuilderRaw(context, tuple, selectedDictIndex);
             },

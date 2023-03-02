@@ -44,9 +44,9 @@ class LangChars extends CustomPage {
         child: Selector<MyHomePageModel, int>(
           selector: (_, myHomePageModel) => myHomePageModel.selectedDictIndex,
           builder: (context, selectedDictIndex, _) =>
-              Selector<CustomPageModel, Tuple3<List, bool, bool>>(
-            selector: (_, pageModel) => Tuple3(
-                pageModel.items, pageModel.searchVisible, pageModel.searchDone),
+              Selector<CustomPageModel, Tuple2<List, bool>>(
+            selector: (_, pageModel) =>
+                Tuple2(pageModel.items, pageModel.searchDone),
             builder: (context, tuple, __) {
               return (Globals.dicts[selectedDictIndex].hasChars)
                   ? bodyBuilderRaw(context, tuple, selectedDictIndex)
