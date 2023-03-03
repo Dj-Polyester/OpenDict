@@ -30,7 +30,7 @@ abstract class CustomPageModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Widget itemBuilder(int index, int selectedDictIndex);
+  Widget itemBuilder(BuildContext context, int index, int selectedDictIndex);
 }
 
 abstract class CustomPage {
@@ -111,7 +111,7 @@ abstract class CustomPage {
                 itemCount: tuple.item1.length,
                 itemBuilder: (BuildContext context, int index) => context
                     .read<CustomPageModel>()
-                    .itemBuilder(index, selectedDictIndex),
+                    .itemBuilder(context, index, selectedDictIndex),
               )),
       )
     ]);

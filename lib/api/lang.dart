@@ -9,8 +9,8 @@ abstract class Lang<ExpEntry, CharEntry> {
   String? charBaseName;
   bool hasChars = false;
 
-  Widget charEntryItemBuilder(CharEntry charEntryItem);
-  Widget expEntryItemBuilder(ExpEntry expEntryItem);
+  Widget charEntryItemBuilder(BuildContext context, CharEntry charEntryItem);
+  Widget expEntryItemBuilder(BuildContext context, ExpEntry expEntryItem);
 
   Future<List<CharEntry>> loadCharsFromDb(String s);
   Future<List<ExpEntry>> loadExpsFromDb(String s);

@@ -12,8 +12,9 @@ class DictionaryModel extends CustomPageModel {
   });
 
   @override
-  Widget itemBuilder(int index, int selectedDictIndex) {
-    return Globals.dicts[selectedDictIndex].expEntryItemBuilder(items[index]);
+  Widget itemBuilder(BuildContext context, int index, int selectedDictIndex) {
+    return Globals.dicts[selectedDictIndex]
+        .expEntryItemBuilder(context, items[index]);
   }
 }
 

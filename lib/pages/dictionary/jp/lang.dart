@@ -9,6 +9,7 @@ import 'package:jgraph/iso639_2.dart';
 import 'package:jgraph/pages/dictionary/jp/aux.dart';
 import 'package:jgraph/pages/dictionary/jp/char_entry.dart';
 import 'package:jgraph/pages/dictionary/jp/exp_entry.dart';
+import 'package:jgraph/pages/dictionary/jp/exp_screen.dart';
 import 'package:tuple/tuple.dart';
 import 'package:xml/xml.dart';
 
@@ -158,7 +159,7 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
   }
 
   @override
-  Widget charEntryItemBuilder(JPCharEntry charEntryItem) {
+  Widget charEntryItemBuilder(BuildContext context, JPCharEntry charEntryItem) {
     Tuple4<String?, String?, String?, String?> tuple4 =
         getListOfReadingsAndMeaningsFromChar(charEntryItem);
 
@@ -177,13 +178,13 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
 
   void constructListOfSenses(
     JPExpEntry expEntryItem,
-    List<String> listOfSenses, {
-    bool stagr_ = true,
-  }) {
+    List<String> listOfSenses,
+  ) {
     if (expEntryItem.senseEles != null) {
       for (SenseEle senseEle in expEntryItem.senseEles!) {
-        String? tmp = ((stagr_) ? senseEle.stagr : senseEle.stagk)?.join("、");
-        String? senseEleRefined = (tmp == null) ? "" : " ($tmp)";
+        List<String> stag = (senseEle.stagk ?? []) + (senseEle.stagr ?? []);
+        String tmp = stag.join("、");
+        String? senseEleRefined = (tmp.isEmpty) ? "" : " ($tmp)";
 
         String senseTxt =
             "${senseEle.gloss?.map((e) => e.text).join(", ") ?? ""}$senseEleRefined";
@@ -229,7 +230,7 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
           }
         }
       }
-      constructListOfSenses(expEntryItem, listOfSenses, stagr_: false);
+      constructListOfSenses(expEntryItem, listOfSenses);
       // dev.log(listOfReadings.toString(), name: "Japanese");
       listOfReadingsIntermediary = listOfReadings
           .map((e) => "${e.item1.join("、")} (${e.item2.join("、")})")
@@ -243,8 +244,10 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
     return Tuple2(listOfReadingsRefined, listOfSensesRefined);
   }
 
+  expEntryDetailsBuilder(JPExpEntry expEntryItem) {}
+
   @override
-  Widget expEntryItemBuilder(JPExpEntry expEntryItem) {
+  Widget expEntryItemBuilder(BuildContext context, JPExpEntry expEntryItem) {
     Tuple2<List<String>, List<String>> tuple2 =
         getListOfReadingsAndMeaningsFromExp(expEntryItem);
 
@@ -255,6 +258,8 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
       leading: const Icon(Icons.star_border_outlined),
       title: Text(listOfReadings.join("\n")),
       subtitle: Text(listOfSenses.join("\n")),
+      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => JPExpScreen(expEntryItem, tuple2))),
     );
   }
 

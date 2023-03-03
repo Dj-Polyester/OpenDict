@@ -15,8 +15,9 @@ class LangCharsModel extends CustomPageModel {
   });
 
   @override
-  Widget itemBuilder(int index, int selectedDictIndex) {
-    return Globals.dicts[selectedDictIndex].charEntryItemBuilder(items[index]);
+  Widget itemBuilder(BuildContext context, int index, int selectedDictIndex) {
+    return Globals.dicts[selectedDictIndex]
+        .charEntryItemBuilder(context, items[index]);
   }
 }
 

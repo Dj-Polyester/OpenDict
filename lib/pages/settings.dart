@@ -10,7 +10,7 @@ class SettingsModel extends CustomPageModel {
   });
 
   @override
-  Widget itemBuilder(int index, int selectedDictIndex) {
+  Widget itemBuilder(BuildContext context, int index, int selectedDictIndex) {
     // TODO: implement itemBuilder
     throw UnimplementedError();
   }
