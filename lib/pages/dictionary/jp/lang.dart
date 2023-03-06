@@ -1,5 +1,6 @@
+import 'dart:convert';
 import 'dart:developer' as dev;
-
+import 'package:path/path.dart' as p;
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
@@ -184,7 +185,14 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
       for (SenseEle senseEle in expEntryItem.senseEles!) {
         List<String> stag = (senseEle.stagk ?? []) + (senseEle.stagr ?? []);
         String tmp = stag.join("、");
-        String? senseEleRefined = (tmp.isEmpty) ? "" : " ($tmp)";
+
+        String senseEleRefined = (senseEle.sInf == null && tmp.isEmpty)
+            ? ""
+            : (senseEle.sInf == null && tmp.isNotEmpty)
+                ? " (valid for $tmp)"
+                : (senseEle.sInf != null && tmp.isEmpty)
+                    ? " (${senseEle.sInf!.join(", ")})"
+                    : " (valid for $tmp, ${senseEle.sInf!.join(", ")})";
 
         String senseTxt =
             "${senseEle.gloss?.map((e) => e.text).join(", ") ?? ""}$senseEleRefined";
@@ -265,10 +273,10 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
 
   @override
   Future<void> load<T>(
-      String baseName, List<T> Function(String contents) parser) async {
+      String baseName, Future<List<T>> Function(String contents) parser) async {
     if (await Db.isEmpty<T>()) {
-      String contents = await loader.loadAsset("$dirName/$baseName");
-      List<T> entries = parser(contents);
+      String contents = await loader.loadAsset(p.join(dirName!, baseName));
+      List<T> entries = await parser(contents);
       await loader.load2db<T>(entries);
     }
   }
@@ -317,122 +325,187 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
         .findAll();
   }
 
-  @override
-  List<JPCharEntry> parseChars(String contents) {
-    // TODO: implement parseChars
-    return XmlDocument.parse(contents).findAllElements("character").map((elem) {
-      final List<Radical> radical = elem
-          .getElement("radical")!
-          .findAllElements("rad_value")
-          .map((rawRadValue) => Radical()
-            ..radType = rawRadValue.getAttributeMap(
-                "rad_type", "classical", JPAux.radTypeMap)
-            ..radValue = rawRadValue.text)
-          .toList();
+  Map<String, List<String>> parseKradfile(String contents) {
+    Iterable<String> contentsNoComments =
+        LineSplitter.split(contents).where((line) {
+      String lineTrimmed = line.trim();
+      return lineTrimmed[0] != "#" && lineTrimmed != "";
+    });
+    Iterable<List<String>> contentsNoCommentsLiteralAndParts =
+        contentsNoComments.map((line) => line.trim().split(" : "));
 
-      XmlElement miscRaw = elem.getElement("misc")!;
+    return {
+      for (var literalAndParts in contentsNoCommentsLiteralAndParts)
+        literalAndParts.first.trimRight():
+            literalAndParts.last.split(" ").map((e) => e.trim()).toList()
+    };
+  }
 
-      final Misc misc = Misc()
-        ..freq = miscRaw.getTextContentNullableToInt("freq")
-        ..strokeCount = miscRaw.getTextContentNullableToInt("freq")
-        ..jlpt = miscRaw.getTextContentNullableToInt("jlpt")
-        ..grade = JPAux.kanjiGradeMap[miscRaw.getTextContentNullable("grade")]
-        ..radName = miscRaw.findExtractTextNullOtherwise("rad_name");
+  Map<String, List<String>> parseRadkfile(String contents) {
+    Iterable<String> contentsNoComments =
+        LineSplitter.split(contents).where((line) {
+      String lineTrimmed = line.trim();
+      return lineTrimmed[0] != "#" && lineTrimmed != "";
+    });
 
-      final XmlElement? readingMeaningRaw = elem.getElement("reading_meaning");
-      final Iterable<XmlElement>? readingRaw =
-          readingMeaningRaw?.findAllElements("reading");
+    String kanjiElems = "";
+    String? currRadical;
 
-      final ReadingMeaning readingMeaning = ReadingMeaning()
-        ..meaning = readingMeaningRaw?.findExtractTextNullOtherwise("meaning")
-        ..nanori = readingMeaningRaw?.findExtractTextNullOtherwise("nanori")
-        ..onyomi = readingRaw?.getElementsTextWithAttr("r_type", "ja_on")
-        ..kunyomi = readingRaw?.getElementsTextWithAttr("r_type", "ja_kun");
+    Map<String, List<String>> mapRadk = {};
 
-      return JPCharEntry(
-        literal: elem.getTextContent("literal"),
-        radical: radical,
-        misc: misc,
-        readingMeaning: readingMeaning,
-      );
-    }).toList();
+    for (String line in contentsNoComments) {
+      if (line[0] == "\$") {
+        if (currRadical != null) {
+          mapRadk[currRadical] = kanjiElems.split("");
+        }
+        currRadical = line.split(" ")[1].trim();
+        kanjiElems = "";
+      } else {
+        kanjiElems += line.trim();
+      }
+    }
+
+    return mapRadk;
   }
 
   @override
-  List<JPExpEntry> parseExps(String contents) {
-    return XmlDocument.parse(contents).findAllElements("entry").map((elem) {
-      final List<KEle> kElems = elem
-          .findAllElements("k_ele")
-          .map((kElemRaw) => KEle()
-            ..keb = kElemRaw.getTextContent("keb")
-            ..keInf = kElemRaw.findExtractTextMapNullOtherwise(
-                "ke_inf", JPAux.keInfMap)
-            ..isCommon = kElemRaw.exists("ke_pri"))
-          .toList();
+  Future<List<JPCharEntry>> parseChars(String contents) async {
+    Map<String, List<String>> kradfile = parseKradfile(
+        await loader.loadAsset(p.join(dirName!, "kradfile.utf8")));
+    Map<String, List<String>> kradfile2 = parseKradfile(
+        await loader.loadAsset(p.join(dirName!, "kradfile2.utf8")));
+    Map<String, List<String>> radkfile = parseRadkfile(
+        await loader.loadAsset(p.join(dirName!, "radkfile.utf8")));
+    Map<String, List<String>> radkfile2 = parseRadkfile(
+        await loader.loadAsset(p.join(dirName!, "radkfile2.utf8")));
 
-      final List<REle> rElems = elem
-          .findAllElements("r_ele")
-          .map((rElemRaw) => REle()
-            ..reb = rElemRaw.getTextContent("reb")
-            ..reRestr = rElemRaw.findExtractTextNullOtherwise("re_restr")
-            ..reInf = rElemRaw.findExtractTextMapNullOtherwise(
-                "re_inf", JPAux.reInfMap)
-            ..reNoKanji = rElemRaw.exists("re_nokanji")
-            ..isCommon = rElemRaw.exists("re_pri"))
-          .toList();
-      List<String>? currPos, currMisc;
+    return Future.value(
+      XmlDocument.parse(contents).findAllElements("character").map((elem) {
+        final List<Radical> radical = elem
+            .getElement("radical")!
+            .findAllElements("rad_value")
+            .map((rawRadValue) => Radical()
+              ..radType = rawRadValue.getAttributeMap(
+                  "rad_type", "classical", JPAux.radTypeMap)
+              ..radValue = rawRadValue.text)
+            .toList();
 
-      final List<SenseEle> senseElems =
-          elem.findAllElements("sense").map((senseElemRaw) {
-        List<String>? pos =
-            senseElemRaw.findExtractTextMapNullOtherwise("pos", JPAux.posMap);
-        if (pos != null) {
-          currPos = pos;
-        }
-        List<String>? misc =
-            senseElemRaw.findExtractTextMapNullOtherwise("misc", JPAux.miscMap);
-        if (misc != null) {
-          currMisc = misc;
-        }
+        XmlElement miscRaw = elem.getElement("misc")!;
 
-        return SenseEle()
-          ..stagk = senseElemRaw.findExtractTextNullOtherwise("stagk")
-          ..stagr = senseElemRaw.findExtractTextNullOtherwise("stagr")
-          ..ant = senseElemRaw.findExtractTextNullOtherwise("ant")
-          ..xref = senseElemRaw.findExtractTextNullOtherwise("xref")
-          ..pos = currPos
-          ..field = senseElemRaw.findExtractTextMapNullOtherwise(
-              "field", JPAux.fieldMap)
-          ..misc = currMisc
-          ..lsource = senseElemRaw
-              .findAllElements("lsource")
-              .map(
-                (lsourceRaw) => LSource()
-                  ..lang = lsourceRaw.getAttributeMap("lang", "eng", iso639)
-                  ..lsTypeFull = lsourceRaw.getAttribute("ls_type") == null
-                  ..waseiGo = lsourceRaw.getAttribute("ls_wasei") != null
-                  ..text = lsourceRaw.text,
-              )
-              .toList()
-          ..dial = senseElemRaw.findExtractTextMapNullOtherwise(
-              "dial", JPAux.dialMap)
-          ..gloss = senseElemRaw
-              .findAllElements("gloss")
-              .map(
-                (glossRaw) => Gloss()
-                  ..lang = glossRaw.getAttributeMap("lang", "eng", iso639)
-                  ..gType = JPAux.gTypeMap[glossRaw.getAttribute("g_type")]
-                  ..text = glossRaw.text,
-              )
-              .toList()
-          ..sInf = senseElemRaw.findExtractTextNullOtherwise("s_inf");
-      }).toList();
-      return JPExpEntry(
-        id: elem.getTextContentToInt("ent_seq"),
-        kEles: (kElems.isEmpty) ? null : kElems,
-        rEles: (rElems.isEmpty) ? null : rElems,
-        senseEles: (senseElems.isEmpty) ? null : senseElems,
-      );
-    }).toList();
+        final Misc misc = Misc()
+          ..freq = miscRaw.getTextContentNullableToInt("freq")
+          ..strokeCount = miscRaw.getTextContentNullableToInt("freq")
+          ..jlpt = miscRaw.getTextContentNullableToInt("jlpt")
+          ..grade = JPAux.kanjiGradeMap[miscRaw.getTextContentNullable("grade")]
+          ..radName = miscRaw.findExtractTextNullOtherwise("rad_name");
+
+        final XmlElement? readingMeaningRaw =
+            elem.getElement("reading_meaning");
+        final Iterable<XmlElement>? readingRaw =
+            readingMeaningRaw?.findAllElements("reading");
+
+        final ReadingMeaning readingMeaning = ReadingMeaning()
+          ..meaning = readingMeaningRaw?.findExtractTextNullOtherwise("meaning")
+          ..nanori = readingMeaningRaw?.findExtractTextNullOtherwise("nanori")
+          ..onyomi = readingRaw?.getElementsTextWithAttr("r_type", "ja_on")
+          ..kunyomi = readingRaw?.getElementsTextWithAttr("r_type", "ja_kun");
+
+        String literal = elem.getTextContent("literal");
+
+        List<String> kradfileCombined =
+            {...?kradfile[literal], ...?kradfile2[literal]}.toList();
+        List<String> radkfileCombined =
+            {...?radkfile[literal], ...?radkfile2[literal]}.toList();
+
+        return JPCharEntry(
+          literal: literal,
+          radical: radical,
+          misc: misc,
+          readingMeaning: readingMeaning,
+          parts: (kradfileCombined.isEmpty) ? null : kradfileCombined,
+          kanjiElems: (radkfileCombined.isEmpty) ? null : radkfileCombined,
+        );
+      }).toList(),
+    );
+  }
+
+  @override
+  Future<List<JPExpEntry>> parseExps(String contents) {
+    return Future.value(
+      XmlDocument.parse(contents).findAllElements("entry").map((elem) {
+        final List<KEle> kElems = elem
+            .findAllElements("k_ele")
+            .map((kElemRaw) => KEle()
+              ..keb = kElemRaw.getTextContent("keb")
+              ..keInf = kElemRaw.findExtractTextMapNullOtherwise(
+                  "ke_inf", JPAux.keInfMap)
+              ..isCommon = kElemRaw.exists("ke_pri"))
+            .toList();
+
+        final List<REle> rElems = elem
+            .findAllElements("r_ele")
+            .map((rElemRaw) => REle()
+              ..reb = rElemRaw.getTextContent("reb")
+              ..reRestr = rElemRaw.findExtractTextNullOtherwise("re_restr")
+              ..reInf = rElemRaw.findExtractTextMapNullOtherwise(
+                  "re_inf", JPAux.reInfMap)
+              ..reNoKanji = rElemRaw.exists("re_nokanji")
+              ..isCommon = rElemRaw.exists("re_pri"))
+            .toList();
+        List<String>? currPos, currMisc;
+
+        final List<SenseEle> senseElems =
+            elem.findAllElements("sense").map((senseElemRaw) {
+          List<String>? pos =
+              senseElemRaw.findExtractTextMapNullOtherwise("pos", JPAux.posMap);
+          if (pos != null) {
+            currPos = pos;
+          }
+          List<String>? misc = senseElemRaw.findExtractTextMapNullOtherwise(
+              "misc", JPAux.miscMap);
+          if (misc != null) {
+            currMisc = misc;
+          }
+
+          return SenseEle()
+            ..stagk = senseElemRaw.findExtractTextNullOtherwise("stagk")
+            ..stagr = senseElemRaw.findExtractTextNullOtherwise("stagr")
+            ..ant = senseElemRaw.findExtractTextNullOtherwise("ant")
+            ..xref = senseElemRaw.findExtractTextNullOtherwise("xref")
+            ..pos = currPos
+            ..field = senseElemRaw.findExtractTextMapNullOtherwise(
+                "field", JPAux.fieldMap)
+            ..misc = currMisc
+            ..lsource = senseElemRaw
+                .findAllElements("lsource")
+                .map(
+                  (lsourceRaw) => LSource()
+                    ..lang = lsourceRaw.getAttributeMap("lang", "eng", iso639)
+                    ..lsTypeFull = lsourceRaw.getAttribute("ls_type") == null
+                    ..waseiGo = lsourceRaw.getAttribute("ls_wasei") != null
+                    ..text = lsourceRaw.text,
+                )
+                .toList()
+            ..dial = senseElemRaw.findExtractTextMapNullOtherwise(
+                "dial", JPAux.dialMap)
+            ..gloss = senseElemRaw
+                .findAllElements("gloss")
+                .map(
+                  (glossRaw) => Gloss()
+                    ..lang = glossRaw.getAttributeMap("lang", "eng", iso639)
+                    ..gType = JPAux.gTypeMap[glossRaw.getAttribute("g_type")]
+                    ..text = glossRaw.text,
+                )
+                .toList()
+            ..sInf = senseElemRaw.findExtractTextNullOtherwise("s_inf");
+        }).toList();
+        return JPExpEntry(
+          id: elem.getTextContentToInt("ent_seq"),
+          kEles: (kElems.isEmpty) ? null : kElems,
+          rEles: (rElems.isEmpty) ? null : rElems,
+          senseEles: (senseElems.isEmpty) ? null : senseElems,
+        );
+      }).toList(),
+    );
   }
 }

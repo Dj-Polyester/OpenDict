@@ -46,9 +46,19 @@ class JPCharEntry extends CharEntry {
     required this.radical,
     required this.misc,
     this.readingMeaning,
+    this.parts,
+    this.kanjiElems,
   });
 
   final List<Radical> radical;
+
+  ///Miscellenaous info
   final Misc misc;
   final ReadingMeaning? readingMeaning;
+
+  ///The other literal parts that this literal is composed of
+  List<String>? parts;
+
+  ///The literal of this entry could a part of other literals, for which this variable is
+  List<String>? kanjiElems;
 }

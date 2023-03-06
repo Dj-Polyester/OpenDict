@@ -10,18 +10,17 @@ class Loader_ {
     await Db.putAll<T>(objects);
   }
 
-  Future<String> loadAsset(String path) async {
+  Future loadAsset(String path) async {
     final String pathLowered = path.toLowerCase();
     //image asset
     if (pathLowered.endsWith(".png") ||
         pathLowered.endsWith(".jpg") ||
         pathLowered.endsWith(".jpeg")) {
-      loadImageAsset(path);
+      return loadImageAsset(path);
     }
     //text asset
-    else if (pathLowered.endsWith(".xml")) {
-      final String contents = await loadTextAsset(path);
-      return contents;
+    else if (pathLowered.endsWith(".xml") || pathLowered.endsWith(".utf8")) {
+      return await loadTextAsset(path);
     }
     throw Exception("The file $path has invalid type");
   }

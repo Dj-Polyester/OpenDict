@@ -17,7 +17,7 @@ abstract class Lang<ExpEntry, CharEntry> {
   Loader_ loader = Loader_();
 
   Future<void> load<T>(
-      String baseName, List<T> Function(String contents) parser);
+      String baseName, Future<List<T>> Function(String contents) parser);
 
   Future<void> loadExps() async {
     await load<ExpEntry>(expBaseName!, parseExps);
@@ -32,6 +32,6 @@ abstract class Lang<ExpEntry, CharEntry> {
     await loadChars();
   }
 
-  List<ExpEntry> parseExps(String contents);
-  List<CharEntry> parseChars(String contents);
+  Future<List<ExpEntry>> parseExps(String contents);
+  Future<List<CharEntry>> parseChars(String contents);
 }
