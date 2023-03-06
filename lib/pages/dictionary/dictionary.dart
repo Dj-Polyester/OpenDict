@@ -8,7 +8,7 @@ class DictionaryModel extends CustomPageModel {
     super.icon = Icons.book,
     super.label = "Dictionary",
     super.welcomeText =
-        "No expressions are shown. Please make a search using the search button on the top-right corner.",
+        "No expressions are shown. Please search for an expression.",
   });
 
   @override

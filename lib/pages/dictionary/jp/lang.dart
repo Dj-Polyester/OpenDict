@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer' as dev;
+import 'package:jgraph/pages/dictionary/jp/char_screen.dart';
 import 'package:path/path.dart' as p;
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
@@ -127,8 +128,8 @@ extension XmlElementList on Iterable<XmlElement> {
 //     return result;
 //   }
 // }
-class Meaning {
-  Meaning({
+class ExpMeaning {
+  ExpMeaning({
     required this.key,
     this.pos,
     this.value,
@@ -138,8 +139,8 @@ class Meaning {
   String? value;
 }
 
-class Reading {
-  Reading({
+class ExpReading {
+  ExpReading({
     required this.key,
     this.kanji,
     this.kana,
@@ -147,6 +148,15 @@ class Reading {
   int key;
   String? kanji;
   String? kana;
+}
+
+class CharReading {
+  CharReading({
+    required this.type,
+    this.value,
+  });
+  String type;
+  String? value;
 }
 
 class JPLang extends Lang<JPExpEntry, JPCharEntry> {
@@ -162,7 +172,7 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
   bool hasChars = true;
 
   ///Extract onyomi, kunyomi, nanori and meanings
-  Tuple4<String?, String?, String?, String?>
+  Tuple4<CharReading, CharReading, CharReading, String?>
       getListOfReadingsAndMeaningsFromChar(
     JPCharEntry charEntryItem,
   ) {
@@ -171,36 +181,41 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
     String? nanoriTxt = charEntryItem.readingMeaning?.nanori?.join("、");
     String? meaningTxt = charEntryItem.readingMeaning?.meaning?.join(", ");
 
-    String? onyomiTxtRefined = (onyomiTxt == null) ? "" : "on: $onyomiTxt";
-    String? kunyomiTxtRefined = (kunyomiTxt == null) ? "" : "kun: $kunyomiTxt";
-    String? nanoriTxtRefined =
-        (nanoriTxt == null) ? "" : "nanori (readings in names): $nanoriTxt";
-    String? meaningTxtRefined = (meaningTxt == null) ? "" : "($meaningTxt)";
-    return Tuple4(onyomiTxtRefined, kunyomiTxtRefined, nanoriTxtRefined,
-        meaningTxtRefined);
+    return Tuple4(
+        CharReading(type: "on", value: onyomiTxt),
+        CharReading(type: "kun", value: kunyomiTxt),
+        CharReading(type: "nanori (reading(s) in names)", value: nanoriTxt),
+        meaningTxt);
   }
 
   @override
   Widget charEntryItemBuilder(BuildContext context, JPCharEntry charEntryItem) {
-    Tuple4<String?, String?, String?, String?> tuple4 =
+    Tuple4<CharReading, CharReading, CharReading, String?> tuple4 =
         getListOfReadingsAndMeaningsFromChar(charEntryItem);
 
-    String? onyomiTxtRefined = tuple4.item1;
-    String? kunyomiTxtRefined = tuple4.item2;
-    String? nanoriTxtRefined = tuple4.item3;
-    String? meaningTxtRefined = tuple4.item4;
+    List<CharReading> readings = [
+      tuple4.item1,
+      tuple4.item2,
+      tuple4.item3,
+    ];
+
+    String? meaningTxt = tuple4.item4;
 
     return ListTile(
       leading: const Icon(Icons.star_border_outlined),
-      title: Text("${charEntryItem.literal} $meaningTxtRefined"),
-      subtitle:
-          Text("$onyomiTxtRefined\n$kunyomiTxtRefined\n$nanoriTxtRefined"),
+      title: Text(
+          "${charEntryItem.literal}${(meaningTxt == null) ? "" : " ($meaningTxt)"}"),
+      subtitle: Text(readings
+          .map((e) => (e.value == null) ? "" : "${e.type}: ${e.value}")
+          .join("\n")),
+      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => JPCharScreen(charEntryItem, tuple4))),
     );
   }
 
   void constructListOfSenses(
     JPExpEntry expEntryItem,
-    List<Meaning> listOfSenses,
+    List<ExpMeaning> listOfSenses,
   ) {
     if (expEntryItem.senseEles != null) {
       int senseKey = 1;
@@ -220,23 +235,24 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
             "${senseEle.gloss?.map((e) => e.text).join(", ") ?? ""}$senseEleOtherParts";
 
         if (senseTxt.isNotEmpty) {
-          listOfSenses.add(Meaning(
+          listOfSenses.add(ExpMeaning(
               key: senseKey++, pos: senseEle.pos?.join(", "), value: senseTxt));
         }
       }
     }
   }
 
-  Tuple2<List<Reading>, List<Meaning>> getListOfReadingsAndMeaningsFromExp(
+  Tuple2<List<ExpReading>, List<ExpMeaning>>
+      getListOfReadingsAndMeaningsFromExp(
     JPExpEntry expEntryItem,
   ) {
-    List<Reading>? listOfReadingsRefined;
-    List<Meaning> listOfSenses = [];
+    List<ExpReading>? listOfReadingsRefined;
+    List<ExpMeaning> listOfSenses = [];
     int readingKey = 1;
     if (expEntryItem.kEles == null) {
-      List<Reading> listOfReadings = [];
+      List<ExpReading> listOfReadings = [];
       for (REle rEle in expEntryItem.rEles!) {
-        listOfReadings.add(Reading(key: readingKey++, kana: rEle.reb));
+        listOfReadings.add(ExpReading(key: readingKey++, kana: rEle.reb));
       }
       listOfReadingsRefined = listOfReadings;
       constructListOfSenses(expEntryItem, listOfSenses);
@@ -264,7 +280,7 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
 
       // dev.log(listOfReadings.toString(), name: "Japanese");
       listOfReadingsRefined = listOfReadings
-          .map((e) => Reading(
+          .map((e) => ExpReading(
               key: readingKey++,
               kanji: e.item1.join("、"),
               kana: e.item2.join("、")))
@@ -280,11 +296,11 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
 
   @override
   Widget expEntryItemBuilder(BuildContext context, JPExpEntry expEntryItem) {
-    Tuple2<List<Reading>, List<Meaning>> tuple2 =
+    Tuple2<List<ExpReading>, List<ExpMeaning>> tuple2 =
         getListOfReadingsAndMeaningsFromExp(expEntryItem);
 
-    List<Reading> listOfReadings = tuple2.item1;
-    List<Meaning> listOfSenses = tuple2.item2;
+    List<ExpReading> listOfReadings = tuple2.item1;
+    List<ExpMeaning> listOfSenses = tuple2.item2;
 
     return ListTile(
       leading: const Icon(Icons.star_border_outlined),

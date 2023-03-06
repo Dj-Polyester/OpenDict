@@ -7,12 +7,11 @@ import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 
 class LangCharsModel extends CustomPageModel {
-  LangCharsModel({
-    super.icon = Icons.abc,
-    super.label = "Characters",
-    super.welcomeText =
-        "No characters are shown. Please make a search using the search button on the top-right corner.",
-  });
+  LangCharsModel(
+      {super.icon = Icons.abc,
+      super.label = "Characters",
+      super.welcomeText =
+          "No characters are shown. Please search for a character."});
 
   @override
   Widget itemBuilder(BuildContext context, int index, int selectedDictIndex) {

@@ -4,16 +4,19 @@ import 'package:jgraph/pages/dictionary/jp/lang.dart';
 import 'package:tuple/tuple.dart';
 
 class JPExpScreen extends StatelessWidget {
-  const JPExpScreen(this.expEntryItem, this.readingsAndMeanings);
+  const JPExpScreen(this.expEntryItem, this.readingsAndMeanings, {super.key});
   final JPExpEntry expEntryItem;
-  final Tuple2<List<Reading>, List<Meaning>> readingsAndMeanings;
+  final Tuple2<List<ExpReading>, List<ExpMeaning>> readingsAndMeanings;
   @override
   Widget build(BuildContext context) {
-    List<Reading> listOfReadings = readingsAndMeanings.item1;
-    List<Meaning> listOfSenses = readingsAndMeanings.item2;
-    // TODO: implement build
+    List<ExpReading> listOfReadings = readingsAndMeanings.item1;
+    List<ExpMeaning> listOfSenses = readingsAndMeanings.item2;
+    // TODO: add character elements
     return Scaffold(
-      appBar: AppBar(title: const Text("Dictionary")),
+      appBar: AppBar(
+          title: Text((listOfReadings.first.kanji == null)
+              ? listOfReadings.first.kana!.split("、").first
+              : listOfReadings.first.kanji!.split("、").first)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
