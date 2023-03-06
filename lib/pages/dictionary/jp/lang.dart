@@ -127,6 +127,27 @@ extension XmlElementList on Iterable<XmlElement> {
 //     return result;
 //   }
 // }
+class Meaning {
+  Meaning({
+    required this.key,
+    this.pos,
+    this.value,
+  });
+  int key;
+  String? pos;
+  String? value;
+}
+
+class Reading {
+  Reading({
+    required this.key,
+    this.kanji,
+    this.kana,
+  });
+  int key;
+  String? kanji;
+  String? kana;
+}
 
 class JPLang extends Lang<JPExpEntry, JPCharEntry> {
   @override
@@ -179,14 +200,15 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
 
   void constructListOfSenses(
     JPExpEntry expEntryItem,
-    List<String> listOfSenses,
+    List<Meaning> listOfSenses,
   ) {
     if (expEntryItem.senseEles != null) {
+      int senseKey = 1;
       for (SenseEle senseEle in expEntryItem.senseEles!) {
         List<String> stag = (senseEle.stagk ?? []) + (senseEle.stagr ?? []);
         String tmp = stag.join("、");
 
-        String senseEleRefined = (senseEle.sInf == null && tmp.isEmpty)
+        String senseEleOtherParts = (senseEle.sInf == null && tmp.isEmpty)
             ? ""
             : (senseEle.sInf == null && tmp.isNotEmpty)
                 ? " (valid for $tmp)"
@@ -195,27 +217,28 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
                     : " (valid for $tmp, ${senseEle.sInf!.join(", ")})";
 
         String senseTxt =
-            "${senseEle.gloss?.map((e) => e.text).join(", ") ?? ""}$senseEleRefined";
+            "${senseEle.gloss?.map((e) => e.text).join(", ") ?? ""}$senseEleOtherParts";
 
         if (senseTxt.isNotEmpty) {
-          listOfSenses.add(senseTxt);
+          listOfSenses.add(Meaning(
+              key: senseKey++, pos: senseEle.pos?.join(", "), value: senseTxt));
         }
       }
     }
   }
 
-  Tuple2<List<String>, List<String>> getListOfReadingsAndMeaningsFromExp(
+  Tuple2<List<Reading>, List<Meaning>> getListOfReadingsAndMeaningsFromExp(
     JPExpEntry expEntryItem,
   ) {
-    List<String> listOfSenses = [];
-    List<String>? listOfReadingsIntermediary;
-
+    List<Reading>? listOfReadingsRefined;
+    List<Meaning> listOfSenses = [];
+    int readingKey = 1;
     if (expEntryItem.kEles == null) {
-      List<String> listOfReadings = [];
+      List<Reading> listOfReadings = [];
       for (REle rEle in expEntryItem.rEles!) {
-        listOfReadings.add(rEle.reb);
+        listOfReadings.add(Reading(key: readingKey++, kana: rEle.reb));
       }
-      listOfReadingsIntermediary = listOfReadings;
+      listOfReadingsRefined = listOfReadings;
       constructListOfSenses(expEntryItem, listOfSenses);
     } else {
       List<Tuple2<List<String>, List<String>>> listOfReadings = [];
@@ -238,34 +261,40 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
           }
         }
       }
-      constructListOfSenses(expEntryItem, listOfSenses);
+
       // dev.log(listOfReadings.toString(), name: "Japanese");
-      listOfReadingsIntermediary = listOfReadings
-          .map((e) => "${e.item1.join("、")} (${e.item2.join("、")})")
+      listOfReadingsRefined = listOfReadings
+          .map((e) => Reading(
+              key: readingKey++,
+              kanji: e.item1.join("、"),
+              kana: e.item2.join("、")))
           .toList();
+
+      constructListOfSenses(expEntryItem, listOfSenses);
     }
 
-    List<String> listOfReadingsRefined =
-        listOfReadingsIntermediary.makeBullets();
-    List<String> listOfSensesRefined = listOfSenses.makeBullets();
-
-    return Tuple2(listOfReadingsRefined, listOfSensesRefined);
+    return Tuple2(listOfReadingsRefined, listOfSenses);
   }
 
   expEntryDetailsBuilder(JPExpEntry expEntryItem) {}
 
   @override
   Widget expEntryItemBuilder(BuildContext context, JPExpEntry expEntryItem) {
-    Tuple2<List<String>, List<String>> tuple2 =
+    Tuple2<List<Reading>, List<Meaning>> tuple2 =
         getListOfReadingsAndMeaningsFromExp(expEntryItem);
 
-    List<String> listOfReadings = tuple2.item1;
-    List<String> listOfSenses = tuple2.item2;
+    List<Reading> listOfReadings = tuple2.item1;
+    List<Meaning> listOfSenses = tuple2.item2;
 
     return ListTile(
       leading: const Icon(Icons.star_border_outlined),
-      title: Text(listOfReadings.join("\n")),
-      subtitle: Text(listOfSenses.join("\n")),
+      title: Text(listOfReadings
+          .map((e) => (e.kanji == null) ? e.kana : "${e.kanji} (${e.kana})")
+          .toList()
+          .makeBullets()
+          .join("\n")),
+      subtitle: Text(
+          listOfSenses.map((e) => e.value).toList().makeBullets().join("\n")),
       onTap: () => Navigator.of(context).push(MaterialPageRoute(
           builder: (context) => JPExpScreen(expEntryItem, tuple2))),
     );
