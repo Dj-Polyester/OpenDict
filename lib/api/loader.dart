@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:jgraph/api/entry.dart';
+import 'package:jgraph/api/exp_entry.dart';
 import 'package:jgraph/db/db.dart';
 
 class Loader_ {
