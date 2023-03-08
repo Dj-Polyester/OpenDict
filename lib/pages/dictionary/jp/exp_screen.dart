@@ -1,9 +1,11 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 import 'package:jgraph/api/exp_screen.dart';
 import 'package:jgraph/api/lang.dart';
 import 'package:jgraph/db/db.dart';
+import 'package:jgraph/pages/dictionary/jp/aux.dart';
 import 'package:jgraph/pages/dictionary/jp/char_entry.dart';
 import 'package:jgraph/pages/dictionary/jp/exp_entry.dart';
 import 'package:jgraph/pages/dictionary/jp/lang.dart';
@@ -70,8 +72,9 @@ class JPExpScreen extends ExpScreen<JPExpReading, JPExpMeaning> {
                         fontSize: 20, color: Theme.of(context).primaryColor),
                     recognizer: TapGestureRecognizer()
                       ..onTap = () async {
-                        List<List<JPExpEntry>> result = await Future.wait(
-                            e.split("・").map((e) => loadExpsFromDb(e.trim())));
+                        List<List<JPExpEntry>> result = await Future.wait(e
+                            .split("・")
+                            .map((e) => loadExpsFromDbThatMatches(e.trim())));
 
                         if (result.isNotEmpty) {
                           expEntryItemBuilder(context, result.first.first);
@@ -86,8 +89,8 @@ class JPExpScreen extends ExpScreen<JPExpReading, JPExpMeaning> {
   Future<Widget> charListBuilder(BuildContext context) async {
     JPExpEntry jpExpEntryItem = expEntryItem as JPExpEntry;
 
-    Iterable<Set<String>>? iterOfSets =
-        jpExpEntryItem.kEles?.map((e) => e.keb.split("").toSet());
+    Iterable<Set<String>>? iterOfSets = jpExpEntryItem.kEles?.map((e) =>
+        e.keb.split("").whereNot((e) => JPAux.kanaString.contains(e)).toSet());
 
     Set<String>? reducedIterOfSets = iterOfSets?.reduce((value, element) {
       value.addAll(element);
@@ -120,6 +123,49 @@ class JPExpScreen extends ExpScreen<JPExpReading, JPExpMeaning> {
     );
   }
 
+  @override
+  Future<Widget> expListBuilder(BuildContext context) async {
+    JPExpEntry jpExpEntryItem = expEntryItem as JPExpEntry;
+
+    Iterable<Set<String>>? iterOfSets = jpExpEntryItem.kEles?.map((e) =>
+        e.keb.split("").whereNot((e) => JPAux.kanaString.contains(e)).toSet());
+
+    Set<String>? reducedIterOfSets = iterOfSets?.reduce((value, element) {
+      value.addAll(element);
+      return value;
+    });
+    if (reducedIterOfSets == null) {
+      return const SizedBox.shrink();
+    }
+    List<List<JPExpEntry>> result = await Future.wait(
+        reducedIterOfSets.map((e) => loadExpsFromDbThatContains(e.trim())));
+
+    List<JPExpEntry> reducedResult = result.reduce((value, element) {
+      value.addAll(element);
+      return value;
+    });
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(top: 16.0),
+          child: Text(
+            "Related expressions",
+            style: TextStyle(fontSize: 30),
+          ),
+        ),
+        ListView.builder(
+          physics: const ScrollPhysics(),
+          shrinkWrap: true,
+          itemCount: reducedResult.length,
+          itemBuilder: (BuildContext context, int index) => (lang as JPLang)
+              .expEntryItemBuilder(context, reducedResult[index]),
+        ),
+      ],
+    );
+  }
+
   void expEntryItemBuilder(BuildContext context, JPExpEntry expEntryItemOther) {
     Tuple2<List<JPExpReading>, List<JPExpMeaning>> tuple2 =
         (lang as JPLang).getListOfReadingsAndMeaningsFromExp(expEntryItemOther);
@@ -128,21 +174,29 @@ class JPExpScreen extends ExpScreen<JPExpReading, JPExpMeaning> {
         builder: (context) => JPExpScreen(lang, expEntryItemOther, tuple2)));
   }
 
-  Future<List<JPExpEntry>> loadExpsFromDb(String s) async {
+  Future<List<JPExpEntry>> loadExpsFromDbThatMatches(String s) async {
     QueryBuilder<KEle, KEle, QAfterFilterCondition> Function(
         QueryBuilder<KEle, KEle, QFilterCondition>) qKEle;
-    QueryBuilder<REle, REle, QAfterFilterCondition> Function(
-        QueryBuilder<REle, REle, QFilterCondition>) qREle;
 
     qKEle = (q) => q.kebMatches(s);
-    qREle = (q) => q.rebMatches(s);
 
     return await Db.instance
         .collection<JPExpEntry>()
         .filter()
         .kElesElement(qKEle)
-        .or()
-        .rElesElement(qREle)
+        .findAll();
+  }
+
+  Future<List<JPExpEntry>> loadExpsFromDbThatContains(String s) async {
+    QueryBuilder<KEle, KEle, QAfterFilterCondition> Function(
+        QueryBuilder<KEle, KEle, QFilterCondition>) qKEle;
+
+    qKEle = (q) => q.kebContains(s);
+
+    return await Db.instance
+        .collection<JPExpEntry>()
+        .filter()
+        .kElesElement(qKEle)
         .findAll();
   }
 

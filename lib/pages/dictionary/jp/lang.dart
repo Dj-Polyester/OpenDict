@@ -131,20 +131,20 @@ extension XmlElementList on Iterable<XmlElement> {
 class JPExpReading {
   JPExpReading({
     required this.key,
+    required this.kana,
     this.kanji,
-    this.kana,
   });
   int key;
+  String kana;
   String? kanji;
-  String? kana;
 }
 
 class JPExpMeaning {
   JPExpMeaning({
     required this.key,
     required this.gloss,
-    this.pos,
-    this.sInf = "",
+    required this.pos,
+    required this.sInf,
   });
   int key;
   String gloss;
@@ -154,10 +154,19 @@ class JPExpMeaning {
 
 class JPCharReading {
   JPCharReading({
-    required this.type,
+    this.type,
     this.value,
   });
-  String type;
+  String? type;
+  String? value;
+}
+
+class JPCharMeaning {
+  JPCharMeaning({
+    required this.key,
+    this.value,
+  });
+  int key;
   String? value;
 }
 
@@ -174,46 +183,51 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
   bool hasChars = true;
 
   ///Extract onyomi, kunyomi, nanori and meanings
-  Tuple2<Map<String, String>, String?> getListOfReadingsAndMeaningsFromChar(
+  Tuple2<List<JPCharReading>, List<JPCharMeaning>>
+      getListOfReadingsAndMeaningsFromChar(
     JPCharEntry charEntryItem,
   ) {
     List<String>? onyomi = charEntryItem.readingMeaning?.onyomi;
     List<String>? kunyomi = charEntryItem.readingMeaning?.kunyomi;
     List<String>? nanori = charEntryItem.readingMeaning?.nanori;
-    Map<String, String> mapOfReadings = {};
+    List<JPCharReading> listOfReadings = [];
     if (onyomi != null) {
-      mapOfReadings["on"] = onyomi.join("、");
+      listOfReadings.add(JPCharReading(type: "on", value: onyomi.join("、")));
     }
     if (kunyomi != null) {
-      mapOfReadings["kun"] = kunyomi.join("、");
+      listOfReadings.add(JPCharReading(type: "kun", value: kunyomi.join("、")));
     }
     if (nanori != null) {
-      mapOfReadings["nanori (reading(s) in names)"] = nanori.join("、");
+      listOfReadings.add(JPCharReading(
+          type: "nanori (reading(s) in names)", value: nanori.join("、")));
     }
-    String? onyomiTxt = charEntryItem.readingMeaning?.onyomi?.join("、");
-    String? kunyomiTxt = charEntryItem.readingMeaning?.kunyomi?.join("、");
-    String? nanoriTxt = charEntryItem.readingMeaning?.nanori?.join("、");
-    String? meaningTxt = charEntryItem.readingMeaning?.meaning?.join(", ");
 
-    return Tuple2(mapOfReadings, meaningTxt);
+    List<JPCharMeaning> listOfMeanings = charEntryItem.readingMeaning?.meaning
+            ?.asMap()
+            .entries
+            .map((e) => JPCharMeaning(key: e.key + 1, value: e.value))
+            .toList() ??
+        [];
+
+    return Tuple2(listOfReadings, listOfMeanings);
   }
 
   @override
   Widget charEntryItemBuilder(BuildContext context, JPCharEntry charEntryItem) {
-    Tuple2<Map<String, String>, String?> tuple2 =
+    Tuple2<List<JPCharReading>, List<JPCharMeaning>> tuple2 =
         getListOfReadingsAndMeaningsFromChar(charEntryItem);
 
-    Map<String, String> mapOfReadings = tuple2.item1;
-    String? meaningTxt = tuple2.item2;
+    List<JPCharReading> listOfReadings = tuple2.item1;
+    List<JPCharMeaning> listOfMeanings = tuple2.item2;
 
     return ListTile(
       leading: const Icon(Icons.star_border_outlined),
       title: Text(
-          "${charEntryItem.literal}${(meaningTxt == null) ? "" : " ($meaningTxt)"}"),
-      subtitle: Text(
-          mapOfReadings.entries.map((e) => "${e.key}: ${e.value}").join("\n")),
+          "${charEntryItem.literal}${(listOfMeanings.isEmpty) ? "" : " (${listOfMeanings.map((e) => e.value).join(", ")})"}"),
+      subtitle:
+          Text(listOfReadings.map((e) => "${e.type}: ${e.value}").join("\n")),
       onTap: () => Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => JPCharScreen(charEntryItem, tuple2))),
+          builder: (context) => JPCharScreen(this, charEntryItem, tuple2))),
     );
   }
 
@@ -462,7 +476,7 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
 
         final Misc misc = Misc()
           ..freq = miscRaw.getTextContentNullableToInt("freq")
-          ..strokeCount = miscRaw.getTextContentNullableToInt("freq")
+          ..strokeCount = miscRaw.getTextContentNullableToInt("stroke_count")
           ..jlpt = miscRaw.getTextContentNullableToInt("jlpt")
           ..grade = JPAux.kanjiGradeMap[miscRaw.getTextContentNullable("grade")]
           ..radName = miscRaw.findExtractTextNullOtherwise("rad_name");

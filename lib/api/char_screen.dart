@@ -1,22 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:jgraph/api/char_entry.dart';
+import 'package:jgraph/api/lang.dart';
+import 'package:jgraph/pages/dictionary/jp/char_entry.dart';
 import 'package:tuple/tuple.dart';
 
-abstract class CharScreen<CharReading> extends StatelessWidget {
-  const CharScreen(this.charEntryItem, this.readingsAndMeanings, {super.key});
+abstract class CharScreen<CharReading, CharMeaning> extends StatelessWidget {
+  const CharScreen(this.lang, this.charEntryItem, this.readingsAndMeanings,
+      {super.key});
 
   final CharEntry charEntryItem;
-  final Tuple2<Map<String, String>, String?> readingsAndMeanings;
+  final Tuple2<List<CharReading>, List<CharMeaning>> readingsAndMeanings;
+  final Lang lang;
 
   Widget? appBarBuilder(BuildContext context);
-  Widget? readingItemBuilder(
-      BuildContext context, MapEntry<String, String> charReading);
-  Widget? meaningItemBuilder(BuildContext context, String? charMeaning);
+  Widget? readingItemBuilder(BuildContext context, CharReading charReading);
+  Widget? meaningItemBuilder(BuildContext context, CharMeaning charMeaning);
+  Widget charInfoBuilder(BuildContext context) => const SizedBox.shrink();
+  List<Widget> charOtherInfoBuilder(BuildContext context) => [];
 
   @override
   Widget build(BuildContext context) {
-    Map<String, String> mapOfReadings = readingsAndMeanings.item1;
-    String? meaningTxt = readingsAndMeanings.item2;
+    List<CharReading> listOfReadings = readingsAndMeanings.item1;
+    List<CharMeaning> listOfSenses = readingsAndMeanings.item2;
+
     return Scaffold(
       appBar: appBarBuilder(context) as PreferredSizeWidget,
       body: Padding(
@@ -26,35 +32,47 @@ abstract class CharScreen<CharReading> extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.only(top: 16.0),
-              child: (mapOfReadings.isEmpty)
-                  ? const Text(
-                      "There are no readings available for this entry",
-                      style: TextStyle(fontSize: 30),
-                    )
-                  : const Text(
-                      "Readings",
-                      style: TextStyle(fontSize: 30),
-                    ),
-            ),
-            ...mapOfReadings.entries.map(
-              (e) => Padding(
-                padding: const EdgeInsets.only(top: 16.0),
-                child: readingItemBuilder(context, e),
+              child: Text(
+                charEntryItem.literal,
+                style: const TextStyle(fontSize: 100),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(top: 16.0),
-              child: (meaningTxt == null)
-                  ? const Text("There are no meanings available for this entry")
-                  : const Text(
-                      "Meanings",
-                      style: TextStyle(fontSize: 30),
+            charInfoBuilder(context),
+            ...((listOfReadings.isEmpty)
+                ? []
+                : [
+                    const Padding(
+                      padding: EdgeInsets.only(top: 16.0),
+                      child: Text(
+                        "Readings",
+                        style: TextStyle(fontSize: 30),
+                      ),
                     ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 16.0),
-              child: meaningItemBuilder(context, meaningTxt),
-            ),
+                    ...listOfReadings.map(
+                      (e) => Padding(
+                        padding: const EdgeInsets.only(top: 16.0),
+                        child: readingItemBuilder(context, e),
+                      ),
+                    ),
+                  ]),
+            ...((listOfSenses.isEmpty)
+                ? []
+                : [
+                    const Padding(
+                      padding: EdgeInsets.only(top: 16.0),
+                      child: Text(
+                        "Meanings",
+                        style: TextStyle(fontSize: 30),
+                      ),
+                    ),
+                    ...listOfSenses.map(
+                      (e) => Padding(
+                        padding: const EdgeInsets.only(top: 16.0),
+                        child: meaningItemBuilder(context, e),
+                      ),
+                    ),
+                  ]),
+            ...charOtherInfoBuilder(context),
           ],
         ),
       ),

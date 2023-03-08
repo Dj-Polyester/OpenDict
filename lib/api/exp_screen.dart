@@ -21,7 +21,8 @@ abstract class ExpScreen<ExpReading, ExpMeaning> extends StatelessWidget {
       BuildContext context, List listOfReadings, List listOfSenses);
   Future<Widget> charListBuilder(BuildContext context) =>
       Future.value(const SizedBox.shrink());
-
+  Future<Widget> expListBuilder(BuildContext context) =>
+      Future.value(const SizedBox.shrink());
   @override
   Widget build(BuildContext context) {
     List<ExpReading> listOfReadings = readingsAndMeanings.item1;
@@ -92,6 +93,25 @@ abstract class ExpScreen<ExpReading, ExpMeaning> extends StatelessWidget {
                       ),
                     ]
                   : []),
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: FutureBuilder(
+                  future: expListBuilder(context),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return snapshot.data!;
+                    }
+                    if (snapshot.hasError) {
+                      return const Expanded(
+                          child: Text(
+                        "Error: Could not acquire the related expressions for this language",
+                        style: TextStyle(fontSize: 20),
+                      ));
+                    }
+                    return const CircularProgressIndicator();
+                  },
+                ),
+              ),
             ],
           ),
         ),
