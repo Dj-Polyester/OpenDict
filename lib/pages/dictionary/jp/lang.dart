@@ -148,8 +148,8 @@ class JPExpMeaning {
   });
   int key;
   String gloss;
-  String? pos;
   String sInf;
+  String? pos;
 }
 
 class JPCharReading {
@@ -334,7 +334,7 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
       subtitle: Text(
           listOfSenses.map((e) => e.gloss).toList().makeBullets().join("\n")),
       onTap: () => Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => JPExpScreen(expEntryItem, tuple2))),
+          builder: (context) => JPExpScreen(this, expEntryItem, tuple2))),
     );
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:jgraph/api/char_entry.dart';
 import 'package:jgraph/api/exp_entry.dart';
+import 'package:jgraph/api/lang.dart';
 import 'package:tuple/tuple.dart';
 
 class ExpScreenModel {
@@ -8,14 +9,21 @@ class ExpScreenModel {
 }
 
 abstract class ExpScreen<ExpReading, ExpMeaning> extends StatelessWidget {
-  const ExpScreen(this.expEntryItem, this.readingsAndMeanings, {super.key});
+  const ExpScreen(this.lang, this.expEntryItem, this.readingsAndMeanings,
+      {super.key});
   final ExpEntry expEntryItem;
+  final Lang lang;
   final Tuple2<List<ExpReading>, List<ExpMeaning>> readingsAndMeanings;
 
   Widget? readingItemBuilder(BuildContext context, ExpReading expReading);
   Widget? meaningItemBuilder(BuildContext context, ExpMeaning expMeaning);
   Widget? appBarBuilder(
       BuildContext context, List listOfReadings, List listOfSenses);
+  Future<Widget> charListBuilder(BuildContext context) =>
+      Future.value(const Text(
+        "There are no characters available for this language",
+        style: TextStyle(fontSize: 20),
+      ));
 
   @override
   Widget build(BuildContext context) {
@@ -62,6 +70,32 @@ abstract class ExpScreen<ExpReading, ExpMeaning> extends StatelessWidget {
                 child: meaningItemBuilder(context, e),
               ),
             ),
+            const Padding(
+              padding: EdgeInsets.only(top: 16.0),
+              child: Text(
+                "Characters",
+                style: TextStyle(fontSize: 30),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 16.0),
+              child: FutureBuilder(
+                future: charListBuilder(context),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    return snapshot.data!;
+                  }
+                  if (snapshot.hasError) {
+                    return const Expanded(
+                        child: Text(
+                      "Could not acquire the characters for this language",
+                      style: TextStyle(fontSize: 20),
+                    ));
+                  }
+                  return const CircularProgressIndicator();
+                },
+              ),
+            )
           ],
         ),
       ),

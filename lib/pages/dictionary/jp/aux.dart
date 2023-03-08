@@ -160,7 +160,7 @@ class JPAux {
     "sl": "slang",
     "station": "railway station",
     "surname": "family or surname",
-    "uk": "word usually written using kana alone",
+    "uk": "usually written using kana alone",
     "unclass": "unclassified name",
     "vulg": "vulgar expression or word",
     "work": "work of art, literature, music, etc. name",

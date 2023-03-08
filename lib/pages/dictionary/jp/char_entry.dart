@@ -59,6 +59,6 @@ class JPCharEntry extends CharEntry {
   ///The other literal parts that this literal is composed of
   List<String>? parts;
 
-  ///The literal of this entry could a part of other literals, for which this variable is
+  ///The literal of this entry could a part of other literals, for which this variable exists for
   List<String>? kanjiElems;
 }
