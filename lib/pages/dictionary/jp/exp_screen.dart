@@ -19,9 +19,9 @@ class JPExpScreen extends ExpScreen<JPExpReading, JPExpMeaning> {
   Widget? readingItemBuilder(BuildContext context, JPExpReading expReading) =>
       Text.rich(TextSpan(
         children: (expReading.kanji == null)
-            ? [TextSpan(text: expReading.kana)]
+            ? [TextSpan(text: "${expReading.key}. ${expReading.kana}")]
             : [
-                TextSpan(text: "${expReading.kanji} "),
+                TextSpan(text: "${expReading.key}. ${expReading.kanji} "),
                 TextSpan(
                   text: "(${expReading.kana})",
                   style: const TextStyle(fontSize: 16),
@@ -39,9 +39,13 @@ class JPExpScreen extends ExpScreen<JPExpReading, JPExpMeaning> {
             style: const TextStyle(fontSize: 20),
           ),
           TextSpan(
-            text: "${expMeaning.key}. ${expMeaning.value}",
+            text: "${expMeaning.key}. ${expMeaning.gloss}",
             style: const TextStyle(fontSize: 24),
-          )
+          ),
+          TextSpan(
+            text: " ${expMeaning.sInf}",
+            style: const TextStyle(fontSize: 20),
+          ),
         ],
       ));
 }

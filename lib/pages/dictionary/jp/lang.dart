@@ -57,9 +57,9 @@ extension _XmlElement on XmlElement {
     return findAllElements(name).isNotEmpty;
   }
 
-  String getAttributeMap(
-      String name, String defaultValue, Map<String, String> map) {
-    return map[getAttribute(name) ?? defaultValue]!;
+  String getAttributeMap(String name, Map<String, String> map,
+      {String defaultKey = "eng", String defaultValue = "eng"}) {
+    return map[getAttribute(name) ?? defaultKey] ?? defaultValue;
   }
 }
 
@@ -142,12 +142,14 @@ class JPExpReading {
 class JPExpMeaning {
   JPExpMeaning({
     required this.key,
+    required this.gloss,
     this.pos,
-    this.value,
+    this.sInf = "",
   });
   int key;
+  String gloss;
   String? pos;
-  String? value;
+  String sInf;
 }
 
 class JPCharReading {
@@ -223,22 +225,40 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
       int senseKey = 1;
       for (SenseEle senseEle in expEntryItem.senseEles!) {
         List<String> stag = (senseEle.stagk ?? []) + (senseEle.stagr ?? []);
-        String tmp = stag.join("、");
+        String stagStringUnrefined = stag.join("、");
+        String? stagString = (stagStringUnrefined.isEmpty)
+            ? null
+            : "(valid for $stagStringUnrefined)";
+        List<String?>? lsourceInfo = senseEle.lsource?.map((e) {
+          List<String?> tmp = [
+            e.waseiGo ? "waseigo" : null,
+            "${e.lsTypeFull ? "" : "(partially)"} from ${e.lang} '${e.text}'",
+          ];
+          tmp.removeWhere((e) => e == null);
+          return tmp.join(", ");
+        }).toList();
 
-        String senseEleOtherParts = (senseEle.sInf == null && tmp.isEmpty)
-            ? ""
-            : (senseEle.sInf == null && tmp.isNotEmpty)
-                ? " (valid for $tmp)"
-                : (senseEle.sInf != null && tmp.isEmpty)
-                    ? " (${senseEle.sInf!.join(", ")})"
-                    : " (valid for $tmp, ${senseEle.sInf!.join(", ")})";
+        List<String?> senseEleOtherPartsList = [
+          stagString,
+          senseEle.sInf?.join(", "),
+          senseEle.field?.join(", "),
+          senseEle.dial?.join(", "),
+          senseEle.misc?.join(", "),
+          lsourceInfo?.join(", "),
+        ];
+        senseEleOtherPartsList.removeWhere((e) => e == null);
 
-        String senseTxt =
-            "${senseEle.gloss?.map((e) => e.text).join(", ") ?? ""}$senseEleOtherParts";
+        String senseEleOtherParts = senseEleOtherPartsList.join(", ");
 
-        if (senseTxt.isNotEmpty) {
+        String? senseTxt = senseEle.gloss?.map((e) => e.text).join(", ");
+
+        if (senseTxt != null) {
           listOfSenses.add(JPExpMeaning(
-              key: senseKey++, pos: senseEle.pos?.join(", "), value: senseTxt));
+            key: senseKey++,
+            pos: senseEle.pos?.join(", "),
+            gloss: senseTxt,
+            sInf: senseEleOtherParts,
+          ));
         }
       }
     }
@@ -312,7 +332,7 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
           .makeBullets()
           .join("\n")),
       subtitle: Text(
-          listOfSenses.map((e) => e.value).toList().makeBullets().join("\n")),
+          listOfSenses.map((e) => e.gloss).toList().makeBullets().join("\n")),
       onTap: () => Navigator.of(context).push(MaterialPageRoute(
           builder: (context) => JPExpScreen(expEntryItem, tuple2))),
     );
@@ -433,7 +453,8 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
             .findAllElements("rad_value")
             .map((rawRadValue) => Radical()
               ..radType = rawRadValue.getAttributeMap(
-                  "rad_type", "classical", JPAux.radTypeMap)
+                  "rad_type", JPAux.radTypeMap,
+                  defaultKey: "classical", defaultValue: "KangXi")
               ..radValue = rawRadValue.text)
             .toList();
 
@@ -480,6 +501,7 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
   Future<List<JPExpEntry>> parseExps(String contents) {
     return Future.value(
       XmlDocument.parse(contents).findAllElements("entry").map((elem) {
+        int id = elem.getTextContentToInt("ent_seq");
         final List<KEle> kElems = elem
             .findAllElements("k_ele")
             .map((kElemRaw) => KEle()
@@ -527,7 +549,7 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
                 .findAllElements("lsource")
                 .map(
                   (lsourceRaw) => LSource()
-                    ..lang = lsourceRaw.getAttributeMap("lang", "eng", iso639)
+                    ..lang = lsourceRaw.getAttributeMap("xml:lang", iso639)
                     ..lsTypeFull = lsourceRaw.getAttribute("ls_type") == null
                     ..waseiGo = lsourceRaw.getAttribute("ls_wasei") != null
                     ..text = lsourceRaw.text,
@@ -539,7 +561,7 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
                 .findAllElements("gloss")
                 .map(
                   (glossRaw) => Gloss()
-                    ..lang = glossRaw.getAttributeMap("lang", "eng", iso639)
+                    ..lang = glossRaw.getAttributeMap("xml:lang", iso639)
                     ..gType = JPAux.gTypeMap[glossRaw.getAttribute("g_type")]
                     ..text = glossRaw.text,
                 )
@@ -547,7 +569,7 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
             ..sInf = senseElemRaw.findExtractTextNullOtherwise("s_inf");
         }).toList();
         return JPExpEntry(
-          id: elem.getTextContentToInt("ent_seq"),
+          id: id,
           kEles: (kElems.isEmpty) ? null : kElems,
           rEles: (rElems.isEmpty) ? null : rElems,
           senseEles: (senseElems.isEmpty) ? null : senseElems,
