@@ -94,10 +94,7 @@ class JPExpScreen extends ExpScreen<JPExpReading, JPExpMeaning> {
       return value;
     });
     if (reducedIterOfSets == null) {
-      return const Text(
-        "There are no characters available for this entry",
-        style: TextStyle(fontSize: 20),
-      );
+      return const SizedBox.shrink();
     }
     List<List<JPCharEntry>> result = await Future.wait(
         reducedIterOfSets.map((e) => loadCharsFromDb(e.trim())));
@@ -107,11 +104,19 @@ class JPExpScreen extends ExpScreen<JPExpReading, JPExpMeaning> {
       return value;
     });
 
-    return ListView(
-      shrinkWrap: true,
-      children: reducedResult
-          .map((e) => (lang as JPLang).charEntryItemBuilder(context, e))
-          .toList(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(top: 16.0),
+          child: Text(
+            "Characters",
+            style: TextStyle(fontSize: 30),
+          ),
+        ),
+        ...reducedResult
+            .map((e) => (lang as JPLang).charEntryItemBuilder(context, e))
+      ],
     );
   }
 
