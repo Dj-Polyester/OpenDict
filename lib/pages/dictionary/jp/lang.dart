@@ -101,7 +101,7 @@ extension Japanese on String {
     return tmp;
   }
 
-  String toKana(JPCharType type) {
+  String? toKana(JPCharType type) {
     String result = "";
     String tmp = "";
     Map<String, String> map = _constructMap(type);
@@ -129,7 +129,7 @@ extension Japanese on String {
       } else if (JPAux.suujiString.contains(char)) {
         result += char;
       } else {
-        return this;
+        return null;
       }
     }
     return result;
