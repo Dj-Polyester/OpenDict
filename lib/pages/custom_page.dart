@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:jgraph/api/exp_entry.dart';
 import 'package:jgraph/globals.dart';
 import 'package:jgraph/main.dart';
 import 'package:jgraph/widgets/custom_text.dart';

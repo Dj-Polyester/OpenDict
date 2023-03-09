@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:jgraph/api/char_entry.dart';
 import 'package:jgraph/api/lang.dart';
-import 'package:jgraph/pages/dictionary/jp/char_entry.dart';
 import 'package:tuple/tuple.dart';
 
 abstract class CharScreen<CharReading, CharMeaning> extends StatelessWidget {

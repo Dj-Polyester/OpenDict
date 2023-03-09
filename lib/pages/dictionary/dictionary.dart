@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:jgraph/globals.dart';
 import 'package:jgraph/pages/custom_page.dart';
-import 'package:jgraph/api/exp_entry.dart';
 
 class DictionaryModel extends CustomPageModel {
   DictionaryModel({

@@ -121,7 +121,6 @@ class JPCharScreen extends CharScreen<JPCharReading, JPCharMeaning> {
 
   @override
   List<Widget> charOtherInfoBuilder(BuildContext context) {
-    // TODO: implement charOtherInfoBuilder
     JPCharEntry jpCharEntryItem = charEntryItem as JPCharEntry;
     return [
       ...((jpCharEntryItem.parts == null)

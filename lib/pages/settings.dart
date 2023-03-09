@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:jgraph/api/exp_entry.dart';
 import 'package:jgraph/pages/custom_page.dart';
 
 class SettingsModel extends CustomPageModel {

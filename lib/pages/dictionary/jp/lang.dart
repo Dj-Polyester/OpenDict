@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer' as dev;
 import 'package:jgraph/globals.dart';
 import 'package:jgraph/pages/dictionary/jp/char_screen.dart';
 import 'package:path/path.dart' as p;
@@ -332,7 +331,6 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
         }
       }
 
-      // dev.log(listOfReadings.toString(), name: "Japanese");
       listOfReadingsRefined = listOfReadings
           .map((e) => JPExpReading(
               key: readingKey++,
