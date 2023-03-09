@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class CustomTheme {
   static const int nightSwatchColor = 0xFFBB501D;
+  static const int blueGreyColor = 0xFF607D8B;
 
   static Map<String, ThemeData> themes = {
     "Light": ThemeData(
@@ -75,6 +76,7 @@ class CustomTheme {
       ),
     ),
     "Dark": ThemeData(
+      drawerTheme: const DrawerThemeData(backgroundColor: Colors.black),
       primaryColor: Colors.blue,
       scaffoldBackgroundColor: Colors.black,
       dialogBackgroundColor: Colors.black,
@@ -144,6 +146,7 @@ class CustomTheme {
       ),
     ),
     "Night": ThemeData(
+      drawerTheme: const DrawerThemeData(backgroundColor: Colors.black),
       primarySwatch: const MaterialColor(nightSwatchColor, <int, Color>{
         50: Color(nightSwatchColor),
         100: Color(nightSwatchColor),
@@ -219,7 +222,8 @@ class CustomTheme {
       ),
     ),
     "Read Dark": ThemeData(
-      primarySwatch: const MaterialColor(nightSwatchColor, <int, Color>{
+      drawerTheme: const DrawerThemeData(backgroundColor: Colors.black),
+      primarySwatch: const MaterialColor(blueGreyColor, <int, Color>{
         50: Colors.blueGrey,
         100: Colors.blueGrey,
         200: Colors.blueGrey,

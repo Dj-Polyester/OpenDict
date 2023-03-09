@@ -1,3 +1,4 @@
+import 'package:jgraph/api/custom_theme.dart';
 import 'package:jgraph/db/db.dart';
 import 'package:jgraph/globals.dart';
 import 'package:jgraph/pages/custom_page.dart';
@@ -14,16 +15,14 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<GlobalModel>(
       create: (BuildContext context) => GlobalModel(),
       builder: (context, _) => MaterialApp(
         title: 'Flutter Demo',
-        theme: ThemeData(
-          primarySwatch: Colors.blueGrey,
-        ),
+        theme: CustomTheme.themes["Read Light"],
+        darkTheme: CustomTheme.themes["Read Dark"],
         home: ChangeNotifierProvider<MyHomePageModel>(
           create: (context) => MyHomePageModel(),
           child: const MyHomePage(),

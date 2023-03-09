@@ -4,8 +4,6 @@ import 'package:jgraph/pages/dictionary/chars.dart';
 import 'package:jgraph/pages/dictionary/dictionary.dart';
 import 'package:jgraph/pages/dictionary/jp/lang.dart';
 import 'package:jgraph/pages/custom_page.dart';
-import 'package:jgraph/pages/settings.dart';
-import 'package:jgraph/pages/vocabulary.dart';
 import 'package:jgraph/db/db.dart';
 
 class GlobalModel extends ChangeNotifier {}
@@ -22,8 +20,7 @@ class Globals {
   static List<CustomPage> pages = [
     Dictionary(),
     LangChars(),
-    Vocabulary(),
-    Settings(),
+    // Settings(),
   ];
 
   static List<Lang> dicts = [

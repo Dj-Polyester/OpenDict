@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:jgraph/globals.dart';
 import 'package:jgraph/main.dart';
-import 'package:jgraph/widgets/custom_text.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 
@@ -33,9 +32,11 @@ abstract class CustomPageModel extends ChangeNotifier {
 }
 
 abstract class CustomPage {
-  CustomPage({Key? key, required this.model});
+  CustomPage({Key? key, required this.model}) {
+    _controller = TextEditingController();
+  }
   final CustomPageModel model;
-
+  late TextEditingController _controller;
   Widget? drawerBuilder(BuildContext context) => Drawer(
         child: ListView(children: [
           DrawerHeader(
@@ -58,31 +59,28 @@ abstract class CustomPage {
       );
   Widget? appBarBuilder(BuildContext context) => AppBar(
         title: Text(context.read<CustomPageModel>().label),
-        // actions: [
-        //   IconButton(
-        //     onPressed: () {
-        //       context.read<CustomPageModel>().toggleVisibility();
-        //     },
-        //     icon: const Icon(Icons.search),
-        //   )
-        // ],
       );
 
   Widget bodyBuilderRaw(
       BuildContext context, Tuple2 tuple, int selectedDictIndex) {
     return Column(children: [
-      CustomTextWithProvider(
-        prefixIcon: const Icon(Icons.search),
-        labelText: "Search",
-        hintText: "Search for an expression",
-        onChanged: (String s) => onSearchTextChanged(selectedDictIndex, s),
-        onSubmitted: (String s) {
-          if (s.isEmpty) {
-          } else {
-            context.read<CustomPageModel>().didSearch();
-            onSearchTextSubmitted(selectedDictIndex, s);
-          }
-        },
+      Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: TextField(
+          onSubmitted: (String s) {
+            if (s.isEmpty) {
+            } else {
+              context.read<CustomPageModel>().didSearch();
+              onSearchTextSubmitted(selectedDictIndex, s);
+            }
+          },
+          decoration: const InputDecoration(
+              prefixIcon: Icon(Icons.search),
+              labelText: "Search",
+              hintText: "Search for an expression",
+              isCollapsed: false),
+          controller: _controller,
+        ),
       ),
       Expanded(
         child: ((tuple.item1.isEmpty)

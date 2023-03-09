@@ -107,7 +107,6 @@ extension Japanese on String {
 
     for (int i = 0; i < length; i++) {
       var char = this[i];
-      //print(tmp);
       tmp += char;
       if (Globals.asciiVowels.contains(char) ||
           char == "n" ||
@@ -127,8 +126,6 @@ extension Japanese on String {
         result += JPAux.katakanaString[kindex];
       } else if (JPAux.suujiString.contains(char)) {
         result += char;
-      } else {
-        return null;
       }
     }
     return result;
@@ -383,7 +380,7 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
     String? sh = s.tryToKana(JPCharType.hiragana);
     String? sk = s.tryToKana(JPCharType.katakana);
 
-    if (sh == null) {
+    if ((sh == null || sh.isEmpty) && (sk == null || sk.isEmpty)) {
       return await Db.instance
           .collection<JPCharEntry>()
           .filter()
@@ -398,8 +395,47 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
               .or()
               .meaningElementStartsWith(s))
           .findAll();
+    } else if (sh == null || sh.isEmpty) {
+      return await Db.instance
+          .collection<JPCharEntry>()
+          .filter()
+          .literalEqualTo(s)
+          .or()
+          .literalEqualTo(sk!)
+          .or()
+          .readingMeaning((q) => q
+              .kunyomiElementStartsWith(s)
+              .or()
+              .onyomiElementStartsWith(s)
+              .or()
+              .onyomiElementStartsWith(sk)
+              .or()
+              .nanoriElementStartsWith(s)
+              .or()
+              .meaningElementStartsWith(s))
+          .findAll();
+    } else if (sk == null || sk.isEmpty) {
+      return await Db.instance
+          .collection<JPCharEntry>()
+          .filter()
+          .literalEqualTo(s)
+          .or()
+          .literalEqualTo(sh)
+          .or()
+          .readingMeaning((q) => q
+              .kunyomiElementStartsWith(s)
+              .or()
+              .kunyomiElementStartsWith(sh)
+              .or()
+              .onyomiElementStartsWith(s)
+              .or()
+              .nanoriElementStartsWith(s)
+              .or()
+              .nanoriElementStartsWith(sh)
+              .or()
+              .meaningElementStartsWith(s))
+          .findAll();
     }
-
     return await Db.instance
         .collection<JPCharEntry>()
         .filter()
@@ -407,7 +443,7 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
         .or()
         .literalEqualTo(sh)
         .or()
-        .literalEqualTo(sk!)
+        .literalEqualTo(sk)
         .or()
         .readingMeaning((q) => q
             .kunyomiElementStartsWith(s)
@@ -437,9 +473,15 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
     QueryBuilder<Gloss, Gloss, QAfterFilterCondition> Function(
         QueryBuilder<Gloss, Gloss, QFilterCondition>) qGloss;
 
-    if (sh == null) {
+    if ((sh == null || sh.isEmpty) && (sk == null || sk.isEmpty)) {
       qKEle = (q) => q.kebStartsWith(s);
       qREle = (q) => q.rebStartsWith(s);
+    } else if (sh == null || sh.isEmpty) {
+      qKEle = (q) => q.kebStartsWith(s).or().kebStartsWith(sk!);
+      qREle = (q) => q.rebStartsWith(s)..or().rebStartsWith(sk!);
+    } else if (sk == null || sk.isEmpty) {
+      qKEle = (q) => q.kebStartsWith(s).or().kebStartsWith(sh);
+      qREle = (q) => q.rebStartsWith(s).or().rebStartsWith(sh);
     } else {
       qKEle = (q) =>
           q.kebStartsWith(s).or().kebStartsWith(sh).or().kebStartsWith(sk!);
