@@ -25,55 +25,57 @@ abstract class CharScreen<CharReading, CharMeaning> extends StatelessWidget {
 
     return Scaffold(
       appBar: appBarBuilder(context) as PreferredSizeWidget,
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 16.0),
-              child: Text(
-                charEntryItem.literal,
-                style: const TextStyle(fontSize: 100),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: Text(
+                  charEntryItem.literal,
+                  style: const TextStyle(fontSize: 100),
+                ),
               ),
-            ),
-            charInfoBuilder(context),
-            ...((listOfReadings.isEmpty)
-                ? []
-                : [
-                    const Padding(
-                      padding: EdgeInsets.only(top: 16.0),
-                      child: Text(
-                        "Readings",
-                        style: TextStyle(fontSize: 30),
+              charInfoBuilder(context),
+              ...((listOfReadings.isEmpty)
+                  ? []
+                  : [
+                      const Padding(
+                        padding: EdgeInsets.only(top: 16.0),
+                        child: Text(
+                          "Readings",
+                          style: TextStyle(fontSize: 30),
+                        ),
                       ),
-                    ),
-                    ...listOfReadings.map(
-                      (e) => Padding(
-                        padding: const EdgeInsets.only(top: 16.0),
-                        child: readingItemBuilder(context, e),
+                      ...listOfReadings.map(
+                        (e) => Padding(
+                          padding: const EdgeInsets.only(top: 16.0),
+                          child: readingItemBuilder(context, e),
+                        ),
                       ),
-                    ),
-                  ]),
-            ...((listOfSenses.isEmpty)
-                ? []
-                : [
-                    const Padding(
-                      padding: EdgeInsets.only(top: 16.0),
-                      child: Text(
-                        "Meanings",
-                        style: TextStyle(fontSize: 30),
+                    ]),
+              ...((listOfSenses.isEmpty)
+                  ? []
+                  : [
+                      const Padding(
+                        padding: EdgeInsets.only(top: 16.0),
+                        child: Text(
+                          "Meanings",
+                          style: TextStyle(fontSize: 30),
+                        ),
                       ),
-                    ),
-                    ...listOfSenses.map(
-                      (e) => Padding(
-                        padding: const EdgeInsets.only(top: 16.0),
-                        child: meaningItemBuilder(context, e),
+                      ...listOfSenses.map(
+                        (e) => Padding(
+                          padding: const EdgeInsets.only(top: 16.0),
+                          child: meaningItemBuilder(context, e),
+                        ),
                       ),
-                    ),
-                  ]),
-            ...charOtherInfoBuilder(context),
-          ],
+                    ]),
+              ...charOtherInfoBuilder(context),
+            ],
+          ),
         ),
       ),
     );

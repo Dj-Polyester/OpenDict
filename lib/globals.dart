@@ -29,6 +29,6 @@ class Globals {
   static List<Lang> dicts = [
     JPLang(),
   ];
-  // static const List<String> asciiVowels = ["a", "i", "u", "e", "o"];
-  // static const String numbers = "0123456789";
+  static const List<String> asciiVowels = ["a", "i", "u", "e", "o"];
+  static const String numbers = "0123456789";
 }

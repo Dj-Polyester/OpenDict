@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer' as dev;
+import 'package:jgraph/globals.dart';
 import 'package:jgraph/pages/dictionary/jp/char_screen.dart';
 import 'package:path/path.dart' as p;
 import 'package:collection/collection.dart';
@@ -76,58 +77,75 @@ extension XmlElementList on Iterable<XmlElement> {
           .toList();
 }
 
-// enum JPCharType {
-//   hiragana,
-//   katakana,
-//   kanji,
-// }
+enum JPCharType {
+  hiragana,
+  katakana,
+}
 
-// extension Japanese on String {
-//   String toKana(JPCharType type) {
-//     String result = "";
-//     String tmp = "";
-//     late Map<String, String> map;
+extension Japanese on String {
+  Map<String, String> _constructMap(JPCharType type) {
+    late List<Map<String, String>> kanaList;
+    switch (type) {
+      case JPCharType.hiragana:
+        kanaList = JPAux.hiragana;
+        break;
+      case JPCharType.katakana:
+        kanaList = JPAux.katakana;
+        break;
+    }
 
-//     switch (type) {
-//       case JPCharType.hiragana:
-//         map = JPAux.hiraganaMap;
-//         break;
-//       case JPCharType.katakana:
-//         map = JPAux.katakanaMap;
-//         break;
-//       default:
-//         throw TypeError();
-//     }
-//     for (int i = 0; i < length; i++) {
-//       var char = this[i];
-//       tmp += char;
-//       if (Globals.asciiVowels.contains(char) || char.trim() == "") {
-//         result += map[tmp]!;
-//         tmp = "";
-//       } else if (Globals.numbers.contains(char)) {
-//         result += JPAux.numberMap[tmp]!;
-//         tmp = "";
-//       }
-//     }
-//     return result;
-//   }
-//   bool convertible2Kana() {
-//     String result = "";
-//     String tmp = "";
-//     for (int i = 0; i < length; i++) {
-//       var char = this[i];
-//       tmp += char;
-//       if (Globals.asciiVowels.contains(char) || char.trim() == "") {
-//         result += map[tmp]!;
-//         tmp = "";
-//       } else if (Globals.numbers.contains(char)) {
-//         result += JPAux.numberMap[tmp]!;
-//         tmp = "";
-//       }
-//     }
-//     return result;
-//   }
-// }
+    Map<String, String> tmp = {
+      for (var mapEntry in kanaList) mapEntry["roumaji"]!: mapEntry["kana"]!
+    };
+    tmp[" "] = "";
+    return tmp;
+  }
+
+  String toKana(JPCharType type) {
+    String result = "";
+    String tmp = "";
+    Map<String, String> map = _constructMap(type);
+
+    for (int i = 0; i < length; i++) {
+      var char = this[i];
+      //print(tmp);
+      tmp += char;
+      if (Globals.asciiVowels.contains(char) ||
+          char == "n" ||
+          char.trim() == "") {
+        result += map[tmp]!;
+        tmp = "";
+      } else if (Globals.numbers.contains(char)) {
+        result += JPAux.numberMap[tmp]!;
+        tmp = "";
+      } else if (JPAux.hiraganaString.contains(char) &&
+          type == JPCharType.katakana) {
+        int hindex = JPAux.hiraganaString.indexOf(char);
+        result += JPAux.katakanaString[hindex];
+      } else if (JPAux.katakanaString.contains(char) &&
+          type == JPCharType.hiragana) {
+        int kindex = JPAux.katakanaString.indexOf(char);
+        result += JPAux.katakanaString[kindex];
+      } else if (JPAux.suujiString.contains(char)) {
+        result += char;
+      } else {
+        return this;
+      }
+    }
+    return result;
+  }
+
+  String? tryToKana(JPCharType type) {
+    String? result;
+    try {
+      result = toKana(type);
+    } catch (e) {
+      return null;
+    }
+    return result;
+  }
+}
+
 class JPExpReading {
   JPExpReading({
     required this.key,
@@ -364,18 +382,47 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
 
   @override
   Future<List<JPCharEntry>> loadCharsFromDb(String s) async {
-    // TODO: implement loadCharsFromDb
+    String? sh = s.tryToKana(JPCharType.hiragana);
+    String? sk = s.tryToKana(JPCharType.katakana);
+
+    if (sh == null) {
+      return await Db.instance
+          .collection<JPCharEntry>()
+          .filter()
+          .literalEqualTo(s)
+          .or()
+          .readingMeaning((q) => q
+              .kunyomiElementStartsWith(s)
+              .or()
+              .onyomiElementStartsWith(s)
+              .or()
+              .nanoriElementStartsWith(s)
+              .or()
+              .meaningElementStartsWith(s))
+          .findAll();
+    }
+
     return await Db.instance
         .collection<JPCharEntry>()
         .filter()
         .literalEqualTo(s)
         .or()
+        .literalEqualTo(sh)
+        .or()
+        .literalEqualTo(sk!)
+        .or()
         .readingMeaning((q) => q
             .kunyomiElementStartsWith(s)
             .or()
+            .kunyomiElementStartsWith(sh)
+            .or()
             .onyomiElementStartsWith(s)
             .or()
+            .onyomiElementStartsWith(sk)
+            .or()
             .nanoriElementStartsWith(s)
+            .or()
+            .nanoriElementStartsWith(sh)
             .or()
             .meaningElementStartsWith(s))
         .findAll();
@@ -383,7 +430,8 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
 
   @override
   Future<List<JPExpEntry>> loadExpsFromDb(String s) async {
-    String? hiragana, katakana;
+    String? sh = s.tryToKana(JPCharType.hiragana);
+    String? sk = s.tryToKana(JPCharType.katakana);
     QueryBuilder<KEle, KEle, QAfterFilterCondition> Function(
         QueryBuilder<KEle, KEle, QFilterCondition>) qKEle;
     QueryBuilder<REle, REle, QAfterFilterCondition> Function(
@@ -391,8 +439,15 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
     QueryBuilder<Gloss, Gloss, QAfterFilterCondition> Function(
         QueryBuilder<Gloss, Gloss, QFilterCondition>) qGloss;
 
-    qKEle = (q) => q.kebStartsWith(s);
-    qREle = (q) => q.rebStartsWith(s);
+    if (sh == null) {
+      qKEle = (q) => q.kebStartsWith(s);
+      qREle = (q) => q.rebStartsWith(s);
+    } else {
+      qKEle = (q) =>
+          q.kebStartsWith(s).or().kebStartsWith(sh).or().kebStartsWith(sk!);
+      qREle = (q) =>
+          q.rebStartsWith(s).or().rebStartsWith(sh).or().rebStartsWith(sk!);
+    }
     qGloss = (q) => q.textStartsWith(s);
 
     return await Db.instance

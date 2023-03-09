@@ -290,6 +290,26 @@ class JPAux {
   };
   static const String kanaString =
       "あいうえおかきくけこさしすせそたちつてとまみむめもなにぬねのはひふへほらりるれろやゆよわをんがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽゃゅょっアイウエオカキクケコサシスセソタチツテトマミムメモナニヌネノハヒフヘホラリルレロヤユヨワヲンガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポャュョッ";
+  static const String hiraganaString =
+      "あいうえおかきくけこさしすせそたちつてとまみむめもなにぬねのはひふへほらりるれろやゆよわをんがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽゃゅょっ";
+  static const String katakanaString =
+      "アイウエオカキクケコサシスセソタチツテトマミムメモナニヌネノハヒフヘホラリルレロヤユヨワヲンガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポャュョッ";
+  static const String suujiString = "０１２３４５６７８９";
+
+  static const Map<String, String> numberMap = {
+    "0": "０",
+    "1": "１",
+    "2": "２",
+    "3": "３",
+    "4": "４",
+    "5": "５",
+    "6": "６",
+    "7": "７",
+    "8": "８",
+    "9": "９",
+  };
+
+  ///https://gist.github.com/mdzhang/899a427eb3d0181cd762
   static const List<Map<String, String>> hiragana = [
     {"kana": "あ", "roumaji": "a", "type": "gojuuon"},
     {"kana": "い", "roumaji": "i", "type": "gojuuon"},
@@ -397,6 +417,8 @@ class JPAux {
     {"kana": "ぴゅ", "roumaji": "pyu", "type": "youon"},
     {"kana": "ぴょ", "roumaji": "pyo", "type": "youon"}
   ];
+
+  ///https://gist.github.com/mdzhang/53b362cadebf2785ca43
   static const List<Map<String, String>> katakana = [
     {"kana": "ア", "roumaji": "a", "type": "gojuuon"},
     {"kana": "イ", "roumaji": "i", "type": "gojuuon"},
