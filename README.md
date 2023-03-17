@@ -1,16 +1,8 @@
-# jgraph
+# OpenDict
 
-A new Flutter project.
+An open (offline) dictionary project. Currently only Japanese is supported.
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+<img src="/assets/images/readme_imgs/jp_char.png" width="200" />
+<img src="/assets/images/readme_imgs/jp_char_entry.png" width="200" />
+<img src="/assets/images/readme_imgs/jp_dict.png" width="200" />
+<img src="/assets/images/readme_imgs/jp_dict_entry.png" width="200" />
