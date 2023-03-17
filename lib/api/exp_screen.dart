@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:jgraph/api/char_entry.dart';
 import 'package:jgraph/api/exp_entry.dart';
 import 'package:jgraph/api/lang.dart';
+import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 
-class ExpScreenModel {
-  List<CharEntry> charItems = [];
+class ExpScreenModel extends ChangeNotifier {
+  bool relatedExpressionsRevealed = false;
+  void toggleRelatedExpressions() {
+    relatedExpressionsRevealed = !relatedExpressionsRevealed;
+    notifyListeners();
+  }
 }
 
 abstract class ExpScreen<ExpReading, ExpMeaning> extends StatelessWidget {
@@ -15,8 +19,8 @@ abstract class ExpScreen<ExpReading, ExpMeaning> extends StatelessWidget {
   final Lang lang;
   final Tuple2<List<ExpReading>, List<ExpMeaning>> readingsAndMeanings;
 
-  Widget? readingItemBuilder(BuildContext context, ExpReading expReading);
-  Widget? meaningItemBuilder(BuildContext context, ExpMeaning expMeaning);
+  Widget readingItemBuilder(BuildContext context, ExpReading expReading);
+  Widget meaningItemBuilder(BuildContext context, ExpMeaning expMeaning);
   Widget? appBarBuilder(
       BuildContext context, List listOfReadings, List listOfSenses);
   Future<Widget> charListBuilder(BuildContext context) =>
@@ -30,52 +34,66 @@ abstract class ExpScreen<ExpReading, ExpMeaning> extends StatelessWidget {
     return Scaffold(
       appBar: appBarBuilder(context, listOfReadings, listOfSenses)
           as PreferredSizeWidget,
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ...((listOfReadings.isEmpty)
-                  ? []
-                  : [
-                      const Padding(
-                        padding: EdgeInsets.only(top: 16.0),
-                        child: Text(
-                          "Readings",
-                          style: TextStyle(fontSize: 30),
-                        ),
-                      ),
-                      ...listOfReadings.map(
-                        (e) => Padding(
-                          padding: const EdgeInsets.only(top: 16.0),
-                          child: readingItemBuilder(context, e),
-                        ),
-                      ),
-                    ]),
-              ...((listOfSenses.isEmpty)
-                  ? []
-                  : [
-                      const Padding(
-                        padding: EdgeInsets.only(top: 16.0),
-                        child: Text(
-                          "Meanings",
-                          style: TextStyle(fontSize: 30),
-                        ),
-                      ),
-                      ...listOfSenses.map(
-                        (e) => Padding(
-                          padding: const EdgeInsets.only(top: 16.0),
-                          child: meaningItemBuilder(context, e),
-                        ),
-                      ),
-                    ]),
-              ...((lang.hasChars)
-                  ? [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 16.0),
-                        child: FutureBuilder(
-                          future: charListBuilder(context),
+      body: ChangeNotifierProvider(
+        create: (BuildContext context) => ExpScreenModel(),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Selector<ExpScreenModel, bool>(
+              selector: (context, expScreenModel) =>
+                  expScreenModel.relatedExpressionsRevealed,
+              builder: (context, relatedExpressionsRevealed, __) => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ...((listOfReadings.isEmpty)
+                      ? []
+                      : [
+                          const ListTile(
+                            title: Text(
+                              "Readings",
+                              style: TextStyle(fontSize: 30),
+                            ),
+                          ),
+                          ...listOfReadings.map(
+                            (e) => readingItemBuilder(context, e),
+                          ),
+                        ]),
+                  ...((listOfSenses.isEmpty)
+                      ? []
+                      : [
+                          const ListTile(
+                            title: Text(
+                              "Meanings",
+                              style: TextStyle(fontSize: 30),
+                            ),
+                          ),
+                          ...listOfSenses.map(
+                            (e) => meaningItemBuilder(context, e),
+                          ),
+                        ]),
+                  ...((lang.hasChars)
+                      ? [
+                          FutureBuilder(
+                            future: charListBuilder(context),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
+                                return snapshot.data!;
+                              }
+                              if (snapshot.hasError) {
+                                return const Expanded(
+                                    child: Text(
+                                  "Error: Could not acquire the characters for this language",
+                                  style: TextStyle(fontSize: 20),
+                                ));
+                              }
+                              return const CircularProgressIndicator();
+                            },
+                          ),
+                        ]
+                      : []),
+                  (relatedExpressionsRevealed
+                      ? FutureBuilder(
+                          future: expListBuilder(context),
                           builder: (context, snapshot) {
                             if (snapshot.hasData) {
                               return snapshot.data!;
@@ -83,36 +101,26 @@ abstract class ExpScreen<ExpReading, ExpMeaning> extends StatelessWidget {
                             if (snapshot.hasError) {
                               return const Expanded(
                                   child: Text(
-                                "Error: Could not acquire the characters for this language",
+                                "Error: Could not acquire the related expressions for this language",
                                 style: TextStyle(fontSize: 20),
                               ));
                             }
                             return const CircularProgressIndicator();
                           },
-                        ),
-                      ),
-                    ]
-                  : []),
-              Padding(
-                padding: const EdgeInsets.only(top: 16.0),
-                child: FutureBuilder(
-                  future: expListBuilder(context),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return snapshot.data!;
-                    }
-                    if (snapshot.hasError) {
-                      return const Expanded(
-                          child: Text(
-                        "Error: Could not acquire the related expressions for this language",
-                        style: TextStyle(fontSize: 20),
-                      ));
-                    }
-                    return const CircularProgressIndicator();
-                  },
-                ),
+                        )
+                      : ListTile(
+                          title: const Text(
+                            "Related expressions",
+                            style: TextStyle(fontSize: 30),
+                          ),
+                          trailing: const Icon(Icons.arrow_drop_down),
+                          onTap: context
+                              .read<ExpScreenModel>()
+                              .toggleRelatedExpressions,
+                        )),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

@@ -3,7 +3,9 @@ import 'package:isar/isar.dart';
 import 'package:jgraph/api/char_screen.dart';
 import 'package:jgraph/db/db.dart';
 import 'package:jgraph/pages/dictionary/jp/char_entry.dart';
+import 'package:jgraph/pages/dictionary/jp/exp_entry.dart';
 import 'package:jgraph/pages/dictionary/jp/lang.dart';
+import 'package:provider/provider.dart';
 
 class JPCharScreen extends CharScreen<JPCharReading, JPCharMeaning> {
   const JPCharScreen(super.lang, super.charEntryItem, super.readingsAndMeanings,
@@ -14,7 +16,7 @@ class JPCharScreen extends CharScreen<JPCharReading, JPCharMeaning> {
       AppBar(title: Text(charEntryItem.literal));
 
   @override
-  Widget? readingItemBuilder(BuildContext context, JPCharReading charReading) =>
+  Widget readingItemBuilder(BuildContext context, JPCharReading charReading) =>
       Text.rich(TextSpan(
         children: [
           TextSpan(
@@ -30,7 +32,7 @@ class JPCharScreen extends CharScreen<JPCharReading, JPCharMeaning> {
       ));
 
   @override
-  Widget? meaningItemBuilder(BuildContext context, JPCharMeaning charMeaning) =>
+  Widget meaningItemBuilder(BuildContext context, JPCharMeaning charMeaning) =>
       Text(
         "${charMeaning.key}. ${charMeaning.value}",
         style: const TextStyle(fontSize: 24),
@@ -74,9 +76,8 @@ class JPCharScreen extends CharScreen<JPCharReading, JPCharMeaning> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(top: 16.0),
-          child: Text(
+        const ListTile(
+          title: Text(
             "Parts",
             style: TextStyle(fontSize: 30),
           ),
@@ -101,13 +102,15 @@ class JPCharScreen extends CharScreen<JPCharReading, JPCharMeaning> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(top: 16.0),
-          child: Text(
-            "Expressions with compound kanji",
-            style: TextStyle(fontSize: 30),
-          ),
-        ),
+        ListTile(
+            title: const Text(
+              "Expressions with compound kanji",
+              style: TextStyle(fontSize: 30),
+            ),
+            trailing: const Icon(Icons.arrow_drop_up),
+            onTap: () => context
+                .read<CharScreenModel>()
+                .toggleOtherInfo("kanjiElemsRevealed")),
         ListView.builder(
           physics: const ScrollPhysics(),
           shrinkWrap: true,
@@ -120,56 +123,103 @@ class JPCharScreen extends CharScreen<JPCharReading, JPCharMeaning> {
   }
 
   @override
-  List<Widget> charOtherInfoBuilder(BuildContext context) {
+  List<Widget> charOtherInfoBuilder(
+      BuildContext context, Map<String, bool> otherInfo) {
     JPCharEntry jpCharEntryItem = charEntryItem as JPCharEntry;
     return [
       ...((jpCharEntryItem.parts == null)
           ? []
           : [
-              Padding(
-                padding: const EdgeInsets.only(top: 16.0),
-                child: FutureBuilder(
-                  future: partsListBuilder(context),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return snapshot.data!;
-                    }
-                    if (snapshot.hasError) {
-                      return const Expanded(
-                          child: Text(
-                        "Error: Could not acquire the parts associated with this entry",
-                        style: TextStyle(fontSize: 20),
-                      ));
-                    }
-                    return const CircularProgressIndicator();
-                  },
-                ),
+              FutureBuilder(
+                future: partsListBuilder(context),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    return snapshot.data!;
+                  }
+                  if (snapshot.hasError) {
+                    return const Expanded(
+                        child: Text(
+                      "Error: Could not acquire the parts associated with this entry",
+                      style: TextStyle(fontSize: 20),
+                    ));
+                  }
+                  return const CircularProgressIndicator();
+                },
               ),
             ]),
       ...((jpCharEntryItem.kanjiElems == null)
           ? []
           : [
-              Padding(
-                padding: const EdgeInsets.only(top: 16.0),
-                child: FutureBuilder(
-                  future: kanjiElemsListBuilder(context),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return snapshot.data!;
-                    }
-                    if (snapshot.hasError) {
-                      return const Expanded(
-                          child: Text(
-                        "Error: Could not acquire the kanji elements associated with this entry",
-                        style: TextStyle(fontSize: 20),
-                      ));
-                    }
-                    return const CircularProgressIndicator();
-                  },
-                ),
-              ),
+              (otherInfo.containsKey("kanjiElemsRevealed") &&
+                      otherInfo["kanjiElemsRevealed"]!)
+                  ? FutureBuilder(
+                      future: kanjiElemsListBuilder(context),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          return snapshot.data!;
+                        }
+                        if (snapshot.hasError) {
+                          return const Expanded(
+                              child: Text(
+                            "Error: Could not acquire the kanji elements associated with this entry",
+                            style: TextStyle(fontSize: 20),
+                          ));
+                        }
+                        return const CircularProgressIndicator();
+                      },
+                    )
+                  : ListTile(
+                      title: const Text(
+                        "Expressions with compound kanji",
+                        style: TextStyle(fontSize: 30),
+                      ),
+                      trailing: const Icon(Icons.arrow_drop_down),
+                      onTap: () => context
+                          .read<CharScreenModel>()
+                          .toggleOtherInfo("kanjiElemsRevealed"))
             ]),
     ];
+  }
+
+  @override
+  Future<Widget> expListBuilder(BuildContext context) async {
+    JPCharEntry jpCharEntryItem = charEntryItem as JPCharEntry;
+
+    List<JPExpEntry> result =
+        await loadExpsFromDbThatContains(jpCharEntryItem.literal);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ListTile(
+            title: const Text(
+              "Related expressions",
+              style: TextStyle(fontSize: 30),
+            ),
+            trailing: const Icon(Icons.arrow_drop_up),
+            onTap: context.read<CharScreenModel>().toggleRelatedExpressions),
+        ListView.builder(
+          physics: const ScrollPhysics(),
+          shrinkWrap: true,
+          itemCount: result.length,
+          itemBuilder: (BuildContext context, int index) =>
+              (lang as JPLang).expEntryItemBuilder(context, result[index]),
+        ),
+      ],
+    );
+  }
+
+  Future<List<JPExpEntry>> loadExpsFromDbThatContains(String s) async {
+    QueryBuilder<KEle, KEle, QAfterFilterCondition> Function(
+        QueryBuilder<KEle, KEle, QFilterCondition>) qKEle;
+
+    qKEle = (q) => q.kebContains(s);
+
+    return await Db.instance
+        .collection<JPExpEntry>()
+        .filter()
+        .kElesElement(qKEle)
+        .findAll();
   }
 
   Future<List<JPCharEntry>> loadCharsFromDb(String s) async {

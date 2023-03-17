@@ -8,6 +8,7 @@ import 'package:jgraph/pages/dictionary/jp/aux.dart';
 import 'package:jgraph/pages/dictionary/jp/char_entry.dart';
 import 'package:jgraph/pages/dictionary/jp/exp_entry.dart';
 import 'package:jgraph/pages/dictionary/jp/lang.dart';
+import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 
 class ClassName {}
@@ -24,63 +25,67 @@ class JPExpScreen extends ExpScreen<JPExpReading, JPExpMeaning> {
               : listOfReadings.first.kanji!.split("、").first));
 
   @override
-  Widget? readingItemBuilder(BuildContext context, JPExpReading expReading) =>
-      Text.rich(TextSpan(
-        children: (expReading.kanji == null)
-            ? [TextSpan(text: "${expReading.key}. ${expReading.kana}")]
-            : [
-                TextSpan(text: "${expReading.key}. ${expReading.kanji} "),
-                TextSpan(
-                  text: "(${expReading.kana})",
-                  style: const TextStyle(fontSize: 16),
-                )
-              ],
-        style: const TextStyle(fontSize: 20),
-      ));
+  Widget readingItemBuilder(BuildContext context, JPExpReading expReading) =>
+      ListTile(
+        title: Text.rich(TextSpan(
+          children: (expReading.kanji == null)
+              ? [TextSpan(text: "${expReading.key}. ${expReading.kana}")]
+              : [
+                  TextSpan(text: "${expReading.key}. ${expReading.kanji} "),
+                  TextSpan(
+                    text: "(${expReading.kana})",
+                    style: const TextStyle(fontSize: 16),
+                  )
+                ],
+          style: const TextStyle(fontSize: 20),
+        )),
+      );
 
   @override
-  Widget? meaningItemBuilder(BuildContext context, JPExpMeaning expMeaning) {
+  Widget meaningItemBuilder(BuildContext context, JPExpMeaning expMeaning) {
     SenseEle senseEle =
         (expEntryItem as JPExpEntry).senseEles![expMeaning.key - 1];
 
-    return Text.rich(TextSpan(
-      children: [
-        TextSpan(
-          text: "${expMeaning.pos}\n",
-          style: const TextStyle(fontSize: 20),
-        ),
-        TextSpan(
-          text: "${expMeaning.key}. ${expMeaning.gloss}",
-          style: const TextStyle(fontSize: 24),
-        ),
-        TextSpan(
-          text: " ${expMeaning.sInf}",
-          style: const TextStyle(fontSize: 20),
-        ),
-        ...((senseEle.xref == null)
-            ? []
-            : [
-                const TextSpan(
-                  text: "see also ",
-                  style: TextStyle(fontSize: 20),
-                ),
-                ...senseEle.xref!.map((e) => TextSpan(
-                    text: e,
-                    style: TextStyle(
-                        fontSize: 20, color: Theme.of(context).primaryColor),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () async {
-                        List<List<JPExpEntry>> result = await Future.wait(e
-                            .split("・")
-                            .map((e) => loadExpsFromDbThatMatches(e.trim())));
+    return ListTile(
+      title: Text.rich(TextSpan(
+        children: [
+          TextSpan(
+            text: "${expMeaning.pos}\n",
+            style: const TextStyle(fontSize: 20),
+          ),
+          TextSpan(
+            text: "${expMeaning.key}. ${expMeaning.gloss}",
+            style: const TextStyle(fontSize: 24),
+          ),
+          TextSpan(
+            text: " ${expMeaning.sInf}",
+            style: const TextStyle(fontSize: 20),
+          ),
+          ...((senseEle.xref == null)
+              ? []
+              : [
+                  const TextSpan(
+                    text: "see also ",
+                    style: TextStyle(fontSize: 20),
+                  ),
+                  ...senseEle.xref!.map((e) => TextSpan(
+                      text: e,
+                      style: TextStyle(
+                          fontSize: 20, color: Theme.of(context).primaryColor),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () async {
+                          List<List<JPExpEntry>> result = await Future.wait(e
+                              .split("・")
+                              .map((e) => loadExpsFromDbThatMatches(e.trim())));
 
-                        if (result.isNotEmpty) {
-                          expEntryItemBuilder(context, result.first.first);
-                        }
-                      }))
-              ]),
-      ],
-    ));
+                          if (result.isNotEmpty) {
+                            expEntryItemBuilder(context, result.first.first);
+                          }
+                        }))
+                ]),
+        ],
+      )),
+    );
   }
 
   @override
@@ -108,9 +113,8 @@ class JPExpScreen extends ExpScreen<JPExpReading, JPExpMeaning> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(top: 16.0),
-          child: Text(
+        const ListTile(
+          title: Text(
             "Characters",
             style: TextStyle(fontSize: 30),
           ),
@@ -146,13 +150,13 @@ class JPExpScreen extends ExpScreen<JPExpReading, JPExpMeaning> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(top: 16.0),
-          child: Text(
-            "Related expressions",
-            style: TextStyle(fontSize: 30),
-          ),
-        ),
+        ListTile(
+            title: const Text(
+              "Related expressions",
+              style: TextStyle(fontSize: 30),
+            ),
+            trailing: const Icon(Icons.arrow_drop_up),
+            onTap: context.read<ExpScreenModel>().toggleRelatedExpressions),
         ListView.builder(
           physics: const ScrollPhysics(),
           shrinkWrap: true,
