@@ -235,7 +235,7 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
     List<JPCharMeaning> listOfMeanings = tuple2.item2;
 
     return ListTile(
-      leading: const Icon(Icons.star_border_outlined),
+      // leading: const Icon(Icons.star_border_outlined),
       title: Text(
           "${charEntryItem.literal}${(listOfMeanings.isEmpty) ? "" : " (${listOfMeanings.map((e) => e.value).join(", ")})"}"),
       subtitle:
@@ -352,7 +352,7 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
     List<JPExpMeaning> listOfSenses = tuple2.item2;
 
     return ListTile(
-      leading: const Icon(Icons.star_border_outlined),
+      // leading: const Icon(Icons.star_border_outlined),
       title: Text(listOfReadings
           .map((e) => (e.kanji == null) ? e.kana : "${e.kanji} (${e.kana})")
           .toList()

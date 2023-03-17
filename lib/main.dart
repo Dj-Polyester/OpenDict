@@ -70,7 +70,7 @@ class MyHomePage extends StatelessWidget {
             drawer: page.drawerBuilder(context),
             appBar: page.appBarBuilder(context) as PreferredSizeWidget,
             body: page.bodyBuilder(context),
-            floatingActionButton: page.fabBuilder(context),
+            // floatingActionButton: page.fabBuilder(context),
             bottomNavigationBar: BottomNavigationBar(
               type: BottomNavigationBarType.fixed,
               items: Globals.pages
