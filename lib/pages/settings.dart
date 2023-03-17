@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:jgraph/pages/custom_page.dart';
+import 'package:opendict/pages/custom_page.dart';
 
 class SettingsModel extends CustomPageModel {
   SettingsModel({

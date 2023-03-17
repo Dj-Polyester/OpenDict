@@ -9,7 +9,7 @@ class CustomTheme {
       iconTheme: const IconThemeData(
         color: Colors.black54,
       ),
-      primaryColor: Colors.blueGrey,
+      primaryColor: Colors.blue,
       scaffoldBackgroundColor: Colors.white,
       dialogBackgroundColor: Colors.white,
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
@@ -44,7 +44,19 @@ class CustomTheme {
       iconTheme: const IconThemeData(
         color: Colors.black54,
       ),
-      primaryColor: Colors.blue,
+      primarySwatch: const MaterialColor(blueGreyColor, <int, Color>{
+        50: Colors.blueGrey,
+        100: Colors.blueGrey,
+        200: Colors.blueGrey,
+        300: Colors.blueGrey,
+        400: Colors.blueGrey,
+        500: Colors.blueGrey,
+        600: Colors.blueGrey,
+        700: Colors.blueGrey,
+        800: Colors.blueGrey,
+        900: Colors.blueGrey,
+      }),
+      primaryColor: Colors.blueGrey,
       scaffoldBackgroundColor: Colors.white,
       dialogBackgroundColor: Colors.white,
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
@@ -221,7 +233,7 @@ class CustomTheme {
         ),
       ),
     ),
-    "Read Dark": ThemeData(
+    "Read dark": ThemeData(
       drawerTheme: const DrawerThemeData(backgroundColor: Colors.black),
       primarySwatch: const MaterialColor(blueGreyColor, <int, Color>{
         50: Colors.blueGrey,

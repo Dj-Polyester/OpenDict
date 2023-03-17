@@ -1,7 +1,7 @@
-import 'package:jgraph/api/custom_theme.dart';
-import 'package:jgraph/db/db.dart';
-import 'package:jgraph/globals.dart';
-import 'package:jgraph/pages/custom_page.dart';
+import 'package:opendict/api/custom_theme.dart';
+import 'package:opendict/db/db.dart';
+import 'package:opendict/globals.dart';
+import 'package:opendict/pages/custom_page.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 
@@ -21,8 +21,8 @@ class MyApp extends StatelessWidget {
       create: (BuildContext context) => GlobalModel(),
       builder: (context, _) => MaterialApp(
         title: 'Flutter Demo',
-        theme: CustomTheme.themes["Read Light"],
-        darkTheme: CustomTheme.themes["Read Dark"],
+        theme: CustomTheme.themes["Read light"],
+        darkTheme: CustomTheme.themes["Read dark"],
         home: ChangeNotifierProvider<MyHomePageModel>(
           create: (context) => MyHomePageModel(),
           child: const MyHomePage(),

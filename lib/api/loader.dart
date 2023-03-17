@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:jgraph/db/db.dart';
+import 'package:opendict/db/db.dart';
 
 class Loader_ {
   Future<void> load2db<T>(List<T> objects) async {

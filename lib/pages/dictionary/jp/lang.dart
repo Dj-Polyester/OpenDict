@@ -1,17 +1,17 @@
 import 'dart:convert';
-import 'package:jgraph/globals.dart';
-import 'package:jgraph/pages/dictionary/jp/char_screen.dart';
+import 'package:opendict/globals.dart';
+import 'package:opendict/pages/dictionary/jp/char_screen.dart';
 import 'package:path/path.dart' as p;
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
-import 'package:jgraph/api/lang.dart';
-import 'package:jgraph/db/db.dart';
-import 'package:jgraph/iso639_2.dart';
-import 'package:jgraph/pages/dictionary/jp/aux.dart';
-import 'package:jgraph/pages/dictionary/jp/char_entry.dart';
-import 'package:jgraph/pages/dictionary/jp/exp_entry.dart';
-import 'package:jgraph/pages/dictionary/jp/exp_screen.dart';
+import 'package:opendict/api/lang.dart';
+import 'package:opendict/db/db.dart';
+import 'package:opendict/iso639_2.dart';
+import 'package:opendict/pages/dictionary/jp/aux.dart';
+import 'package:opendict/pages/dictionary/jp/char_entry.dart';
+import 'package:opendict/pages/dictionary/jp/exp_entry.dart';
+import 'package:opendict/pages/dictionary/jp/exp_screen.dart';
 import 'package:tuple/tuple.dart';
 import 'package:xml/xml.dart';
 

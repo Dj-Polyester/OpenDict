@@ -1,5 +1,5 @@
 import 'package:isar/isar.dart';
-import 'package:jgraph/api/exp_entry.dart';
+import 'package:opendict/api/exp_entry.dart';
 
 part 'exp_entry.g.dart';
 

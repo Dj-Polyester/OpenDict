@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:jgraph/api/exp_entry.dart';
-import 'package:jgraph/api/lang.dart';
+import 'package:opendict/api/exp_entry.dart';
+import 'package:opendict/api/lang.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:jgraph/globals.dart';
-import 'package:jgraph/main.dart';
-import 'package:jgraph/pages/custom_page.dart';
+import 'package:opendict/globals.dart';
+import 'package:opendict/main.dart';
+import 'package:opendict/pages/custom_page.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 

@@ -1,6 +1,6 @@
 import 'package:isar/isar.dart';
-import 'package:jgraph/pages/dictionary/jp/char_entry.dart';
-import 'package:jgraph/pages/dictionary/jp/exp_entry.dart';
+import 'package:opendict/pages/dictionary/jp/char_entry.dart';
+import 'package:opendict/pages/dictionary/jp/exp_entry.dart';
 
 class Db {
   ///private constructor

@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:jgraph/api/loader.dart';
+import 'package:opendict/api/loader.dart';
 
 ///Utility wrapper for languages
 abstract class Lang<ExpEntry, CharEntry> {

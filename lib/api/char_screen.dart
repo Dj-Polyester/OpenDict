@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:jgraph/api/char_entry.dart';
-import 'package:jgraph/api/lang.dart';
-import 'package:jgraph/pages/dictionary/jp/char_screen.dart';
+import 'package:opendict/api/char_entry.dart';
+import 'package:opendict/api/lang.dart';
+import 'package:opendict/pages/dictionary/jp/char_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 

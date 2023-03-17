@@ -2,12 +2,12 @@ import 'package:collection/collection.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
-import 'package:jgraph/api/exp_screen.dart';
-import 'package:jgraph/db/db.dart';
-import 'package:jgraph/pages/dictionary/jp/aux.dart';
-import 'package:jgraph/pages/dictionary/jp/char_entry.dart';
-import 'package:jgraph/pages/dictionary/jp/exp_entry.dart';
-import 'package:jgraph/pages/dictionary/jp/lang.dart';
+import 'package:opendict/api/exp_screen.dart';
+import 'package:opendict/db/db.dart';
+import 'package:opendict/pages/dictionary/jp/aux.dart';
+import 'package:opendict/pages/dictionary/jp/char_entry.dart';
+import 'package:opendict/pages/dictionary/jp/exp_entry.dart';
+import 'package:opendict/pages/dictionary/jp/lang.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 

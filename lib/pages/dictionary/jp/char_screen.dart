@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
-import 'package:jgraph/api/char_screen.dart';
-import 'package:jgraph/db/db.dart';
-import 'package:jgraph/pages/dictionary/jp/char_entry.dart';
-import 'package:jgraph/pages/dictionary/jp/exp_entry.dart';
-import 'package:jgraph/pages/dictionary/jp/lang.dart';
+import 'package:opendict/api/char_screen.dart';
+import 'package:opendict/db/db.dart';
+import 'package:opendict/pages/dictionary/jp/char_entry.dart';
+import 'package:opendict/pages/dictionary/jp/exp_entry.dart';
+import 'package:opendict/pages/dictionary/jp/lang.dart';
 import 'package:provider/provider.dart';
 
 class JPCharScreen extends CharScreen<JPCharReading, JPCharMeaning> {

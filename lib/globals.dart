@@ -1,10 +1,10 @@
 import 'package:flutter/widgets.dart';
-import 'package:jgraph/api/lang.dart';
-import 'package:jgraph/pages/dictionary/chars.dart';
-import 'package:jgraph/pages/dictionary/dictionary.dart';
-import 'package:jgraph/pages/dictionary/jp/lang.dart';
-import 'package:jgraph/pages/custom_page.dart';
-import 'package:jgraph/db/db.dart';
+import 'package:opendict/api/lang.dart';
+import 'package:opendict/pages/dictionary/chars.dart';
+import 'package:opendict/pages/dictionary/dictionary.dart';
+import 'package:opendict/pages/dictionary/jp/lang.dart';
+import 'package:opendict/pages/custom_page.dart';
+import 'package:opendict/db/db.dart';
 
 class GlobalModel extends ChangeNotifier {}
 
