@@ -113,6 +113,16 @@ extension Japanese on String {
           char.trim() == "") {
         result += map[tmp]!;
         tmp = "";
+      } else if (i != length - 1 && char == this[i + 1]) {
+        switch (type) {
+          case JPCharType.hiragana:
+            result += "っ";
+            break;
+          case JPCharType.katakana:
+            result += "ッ";
+            break;
+        }
+        tmp = "";
       } else if (Globals.numbers.contains(char)) {
         result += JPAux.numberMap[tmp]!;
         tmp = "";
@@ -128,7 +138,7 @@ extension Japanese on String {
         result += char;
       }
     }
-    return result;
+    return result.isEmpty ? null : result;
   }
 
   String? tryToKana(JPCharType type) {
@@ -380,7 +390,7 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
     String? sh = s.tryToKana(JPCharType.hiragana);
     String? sk = s.tryToKana(JPCharType.katakana);
 
-    if ((sh == null || sh.isEmpty) && (sk == null || sk.isEmpty)) {
+    if (sh == null && sk == null) {
       return await Db.instance
           .collection<JPCharEntry>()
           .filter()
@@ -395,7 +405,7 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
               .or()
               .meaningElementStartsWith(s))
           .findAll();
-    } else if (sh == null || sh.isEmpty) {
+    } else if (sh == null) {
       return await Db.instance
           .collection<JPCharEntry>()
           .filter()
@@ -414,7 +424,7 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
               .or()
               .meaningElementStartsWith(s))
           .findAll();
-    } else if (sk == null || sk.isEmpty) {
+    } else if (sk == null) {
       return await Db.instance
           .collection<JPCharEntry>()
           .filter()
@@ -473,13 +483,13 @@ class JPLang extends Lang<JPExpEntry, JPCharEntry> {
     QueryBuilder<Gloss, Gloss, QAfterFilterCondition> Function(
         QueryBuilder<Gloss, Gloss, QFilterCondition>) qGloss;
 
-    if ((sh == null || sh.isEmpty) && (sk == null || sk.isEmpty)) {
+    if (sh == null && sk == null) {
       qKEle = (q) => q.kebStartsWith(s);
       qREle = (q) => q.rebStartsWith(s);
-    } else if (sh == null || sh.isEmpty) {
+    } else if (sh == null) {
       qKEle = (q) => q.kebStartsWith(s).or().kebStartsWith(sk!);
       qREle = (q) => q.rebStartsWith(s)..or().rebStartsWith(sk!);
-    } else if (sk == null || sk.isEmpty) {
+    } else if (sk == null) {
       qKEle = (q) => q.kebStartsWith(s).or().kebStartsWith(sh);
       qREle = (q) => q.rebStartsWith(s).or().rebStartsWith(sh);
     } else {
